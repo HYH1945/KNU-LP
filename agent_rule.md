@@ -9,8 +9,9 @@ AI 에이전트 사용하실거 감안해서 필요할까 싶어 작성해두었
 ## 브랜치 규칙
 
 - `main`에 직접 push X
-- 작업 시 브랜치명: `feat/<scope>/<기능명>` 또는 `fix/<scope>/<버그명>`
-- 완료 후 `develop`으로 PR 생성 (1차 통합)
+- develop에서 개인 작업(모듈) 브랜치 만들기
+- 작업 시 브랜치명: `<scope>/<기능명>` 예시 : AI/Task_1/yolo, BE/login
+- 작업 완료 후 `develop`으로 PR 생성 (1차 통합)
 - 이후 최종 검수후 main으로 merge
 
 ## 코드 작성 규칙
