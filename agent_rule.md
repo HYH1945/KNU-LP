@@ -8,10 +8,10 @@ AI 에이전트 사용하실거 감안해서 필요할까 싶어 작성해두었
 
 ## 브랜치 규칙
 
-- `main`에 직접 push 금지
-- 작업은 `develop` 기반 feature 브랜치에서 진행
-- 브랜치명: `feature/<scope>/<기능명>` 또는 `fix/<scope>/<버그명>`
-- 완료 후 `develop`으로 PR 생성
+- `main`에 직접 push X
+- 작업 시 브랜치명: `feat/<scope>/<기능명>` 또는 `fix/<scope>/<버그명>`
+- 완료 후 `develop`으로 PR 생성 (1차 통합)
+- 이후 최종 검수후 main으로 merge
 
 ## 코드 작성 규칙
 
