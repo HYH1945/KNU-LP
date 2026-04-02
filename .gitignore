@@ -1,0 +1,16 @@
+# Datasets
+dataset/
+data/dataset/
+
+# Model Weights
+*.pt
+*.pth
+
+# Python Environments & Caches
+venv/
+__pycache__/
+*.pyc
+
+# Test Results & Generated Images
+results/
+*.png

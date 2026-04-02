@@ -1,8 +1,14 @@
+import sys
 from pathlib import Path
 
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+
+# Add the parent directory to sys.path to access utils
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from utils.metrics import mae_np as mae, mse_np as mse, psnr_np as psnr, ssim_np as ssim, pixel_accuracy_np as pixel_accuracy
+from utils.visualize import show_samples_for_method, show_comparison_across_methods
 
 # 설정
 class Config:
@@ -66,47 +72,7 @@ def apply_median(img_uint8, ksize=3):
     return cv2.medianBlur(img_uint8, ksize)
 
 
-# 평가 지표
-def mae(pred, target):
-    return np.mean(np.abs(pred - target))
 
-
-def mse(pred, target):
-    return np.mean((pred - target) ** 2)
-
-# PSNR
-def psnr(pred, target):
-
-    mse_val = mse(pred, target)
-    if mse_val == 0:
-        return 100.0
-    return 10 * np.log10(1.0 / mse_val)
-
-# 전역 SSIM
-def ssim(pred, target):
-
-    C1 = 0.01 ** 2
-    C2 = 0.03 ** 2
-
-    mu_x = pred.mean()
-    mu_y = target.mean()
-
-    var_x = pred.var()
-    var_y = target.var()
-    cov_xy = ((pred - mu_x) * (target - mu_y)).mean()
-
-    numerator = (2 * mu_x * mu_y + C1) * (2 * cov_xy + C2)
-    denominator = (mu_x ** 2 + mu_y ** 2 + C1) * (var_x + var_y + C2)
-
-    return numerator / (denominator + 1e-8)
-
-
-def pixel_accuracy(pred, target, threshold=0.05):
-    """
-    보조 지표 - pred와 GT의 차이가 threshold 이하인 픽셀 비율
-    """
-    diff = np.abs(pred - target)
-    return np.mean(diff <= threshold)
 
 
 # 전체 평가
@@ -185,61 +151,7 @@ def print_summary_table(results_dict):
 
 
 
-# 샘플 시각화
-def show_samples_for_method(method_name, sample_results, sample_count=3):
 
-    sample_count = min(sample_count, len(sample_results))
-    selected = sample_results[:sample_count]
-
-    fig, axes = plt.subplots(sample_count, 3, figsize=(9, 3 * sample_count))
-
-    if sample_count == 1:
-        axes = np.expand_dims(axes, axis=0)
-
-    for i, sample in enumerate(selected):
-        axes[i, 0].imshow(sample["input"], cmap="gray")
-        axes[i, 0].set_title(f"Noisy Input\n{sample['filename']}")
-        axes[i, 0].axis("off")
-
-        axes[i, 1].imshow(sample["output"], cmap="gray")
-        axes[i, 1].set_title(f"{method_name} Output")
-        axes[i, 1].axis("off")
-
-        axes[i, 2].imshow(sample["target"], cmap="gray")
-        axes[i, 2].set_title("Target (GT)")
-        axes[i, 2].axis("off")
-
-    plt.tight_layout()
-    plt.show()
-
-
-def show_comparison_across_methods(method_samples_dict, sample_index=0):
-    # 한 샘플에 대해 여러 방법을 한 번에 비교
-    methods = list(method_samples_dict.keys())
-    num_methods = len(methods)
-
-    fig, axes = plt.subplots(1, num_methods + 2, figsize=(3 * (num_methods + 2), 3))
-
-    # 기준 샘플은 첫 method에서 가져옴
-    first_method = methods[0]
-    sample = method_samples_dict[first_method][sample_index]
-
-    axes[0].imshow(sample["input"], cmap="gray")
-    axes[0].set_title("Noisy Input")
-    axes[0].axis("off")
-
-    for i, method in enumerate(methods, start=1):
-        sample_m = method_samples_dict[method][sample_index]
-        axes[i].imshow(sample_m["output"], cmap="gray")
-        axes[i].set_title(method)
-        axes[i].axis("off")
-
-    axes[-1].imshow(sample["target"], cmap="gray")
-    axes[-1].set_title("Target")
-    axes[-1].axis("off")
-
-    plt.tight_layout()
-    plt.show()
 
 
 # 메인 실행

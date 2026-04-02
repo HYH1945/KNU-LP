@@ -1,3 +1,4 @@
+import sys
 import random
 from pathlib import Path
 
@@ -9,6 +10,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from utils.metrics import psnr_torch, ssim_torch, pixel_accuracy_torch as pixel_accuracy
+from utils.visualize import show_samples_torch as show_samples
 
 # 설정
 class Config:
@@ -24,39 +29,7 @@ class Config:
     pixel_acc_threshold = 0.05
 
 
-# PSNR - 값이 높을수록 GT와 가까움
-def psnr_torch(pred: torch.Tensor, target: torch.Tensor) -> float:
 
-    mse = F.mse_loss(pred, target).item()
-    if mse == 0:
-        return 100.0
-    return 10 * np.log10(1.0 / mse)
-
-# 전역 SSIM - 학습 모니터링용
-def ssim_torch(pred: torch.Tensor, target: torch.Tensor) -> float:
-
-    C1 = 0.01 ** 2
-    C2 = 0.03 ** 2
-
-    pred_mean = pred.mean().item()
-    target_mean = target.mean().item()
-
-    pred_var = pred.var(unbiased=False).item()
-    target_var = target.var(unbiased=False).item()
-
-    covariance = ((pred - pred.mean()) * (target - target.mean())).mean().item()
-
-    numerator = (2 * pred_mean * target_mean + C1) * (2 * covariance + C2)
-    denominator = (pred_mean ** 2 + target_mean ** 2 + C1) * (pred_var + target_var + C2)
-
-    return numerator / (denominator + 1e-8)
-
-# 보조 지표
-def pixel_accuracy(pred: torch.Tensor, target: torch.Tensor, threshold: float = 0.05) -> float:
-
-    diff = torch.abs(pred - target)
-    correct = (diff <= threshold).float().mean().item()
-    return correct
 
 
 # 데이터셋
@@ -186,43 +159,7 @@ def print_eval_results(results, title="DnCNN Evaluation Results"):
     print(f"SSIM : {results['ssim']:.4f}")
     print(f"ACC  : {results['acc']:.4f}")
 
-# 시각화
-@torch.no_grad()
-def show_samples(model, dataloader, device, num_samples=3):
-    model.eval()
 
-    batch = next(iter(dataloader))
-    x = batch["input"].to(device)
-    y = batch["target"].to(device)
-    filenames = batch["filename"]
-
-    pred = model(x)
-
-    num_samples = min(num_samples, x.size(0))
-    fig, axes = plt.subplots(num_samples, 3, figsize=(9, 3 * num_samples))
-
-    if num_samples == 1:
-        axes = np.expand_dims(axes, axis=0)
-
-    for i in range(num_samples):
-        inp_img = x[i].cpu().squeeze(0).numpy()
-        pred_img = pred[i].cpu().squeeze(0).numpy()
-        target_img = y[i].cpu().squeeze(0).numpy()
-
-        axes[i, 0].imshow(inp_img, cmap="gray")
-        axes[i, 0].set_title(f"Noisy Input\n{filenames[i]}")
-        axes[i, 0].axis("off")
-
-        axes[i, 1].imshow(pred_img, cmap="gray")
-        axes[i, 1].set_title("DnCNN Output")
-        axes[i, 1].axis("off")
-
-        axes[i, 2].imshow(target_img, cmap="gray")
-        axes[i, 2].set_title("Target (GT)")
-        axes[i, 2].axis("off")
-
-    plt.tight_layout()
-    plt.show()
 
 # 체크포인트 로드
 def load_checkpoint(model, checkpoint_path, device):
