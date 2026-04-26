@@ -1,0 +1,61 @@
+.wrapper {
+  display: grid;
+  gap: 18px;
+}
+
+.dropZone {
+  padding: 26px 18px;
+  border: 2px dashed rgba(134, 72, 26, 0.35);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 245, 232, 0.9), rgba(255, 251, 246, 0.96)),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(183, 113, 58, 0.04) 0,
+      rgba(183, 113, 58, 0.04) 12px,
+      transparent 12px,
+      transparent 24px
+    );
+  text-align: center;
+  cursor: pointer;
+}
+
+.dropTitle {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.dropText {
+  margin: 0;
+  color: #655c52;
+  line-height: 1.5;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.helper {
+  margin: 0;
+  color: #934214;
+  font-weight: 700;
+}
+
+@media (max-width: 960px) {
+  .slotGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .slotGrid {
+    grid-template-columns: 1fr;
+  }
+}

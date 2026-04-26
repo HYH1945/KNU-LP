@@ -1,0 +1,93 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(14, 11, 8, 0.6);
+  backdrop-filter: blur(5px);
+}
+
+.dialog {
+  width: min(980px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: 22px;
+  border-radius: 26px;
+  background: #fffaf4;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.22);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.closeButton {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: #231b14;
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.body {
+  display: grid;
+  gap: 18px;
+}
+
+.singleImage,
+.compareImage {
+  width: 100%;
+  border-radius: 20px;
+  background: #efe7da;
+}
+
+.singleImage {
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+.meta {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #f3ebdf;
+  color: #40352c;
+  font-weight: 700;
+}
+
+.compareGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.compareCard {
+  display: grid;
+  gap: 10px;
+}
+
+.compareLabel {
+  margin: 0;
+  font-weight: 800;
+  color: #8d4318;
+}
+
+@media (max-width: 720px) {
+  .compareGrid {
+    grid-template-columns: 1fr;
+  }
+}
