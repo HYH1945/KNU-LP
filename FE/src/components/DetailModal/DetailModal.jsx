@@ -22,20 +22,27 @@ const getModalContent = (stage, index, result, previews) => {
   }
 
   if (stage === 'YOLO') {
-    const box = result.yolo_boxes[index];
     return {
       title: `YOLO Crop ${index + 1}`,
       content: (
-        <>
-          <img
-            className={styles.singleImage}
-            src={result.yolo_crops[index]}
-            alt={`yolo-detail-${index + 1}`}
-          />
-          <p className={styles.meta}>
-            {`x=${box.x} y=${box.y} w=${box.w} h=${box.h} conf=${box.confidence}`}
-          </p>
-        </>
+        <div className={styles.compareGrid}>
+          <div className={styles.compareCard}>
+            <p className={styles.compareLabel}>선택된 부분</p>
+            <img
+              className={styles.compareImage}
+              src={result.yolo_selected[index]}
+              alt={`input-compare-${index + 1}`}
+            />
+          </div>
+          <div className={styles.compareCard}>
+            <p className={styles.compareLabel}>크롭된 부분</p>
+            <img
+              className={styles.compareImage}
+              src={result.yolo_crops[index]}
+              alt={`input-compare-${index + 1}`}
+            />
+          </div>
+        </div>
       ),
     };
   }
@@ -49,7 +56,7 @@ const getModalContent = (stage, index, result, previews) => {
             <p className={styles.compareLabel}>원본</p>
             <img
               className={styles.compareImage}
-              src={previews[index]}
+              src={result.yolo_crops[index]}
               alt={`input-compare-${index + 1}`}
             />
           </div>

@@ -6,7 +6,7 @@ import { DUMMY_RESPONSE, USE_DUMMY } from '../constants/dummy';
  * Purpose: 파이프라인 응답의 5개 고정 길이 배열 스키마를 검증한다.
  */
 const validateResponseShape = (response) => {
-  const targetKeys = ['yolo_crops', 'yolo_boxes', 'denoised', 'sr'];
+  const targetKeys = ['yolo_crops', 'yolo_selected', 'denoised', 'sr'];
   const isValid = targetKeys.every(
     (key) => Array.isArray(response?.[key]) && response[key].length === 5,
   );
