@@ -36,7 +36,13 @@ async def analyze_images(files: list[UploadFile] | None = File(default=None)) ->
         for file in files
     ]
 
+    
     yolo_crops, yolo_selected = run_yolo(images)
+    try:
+        assert(len(yolo_crops) == len(yolo_selected) and len(yolo_crops) == 5)
+    except AssertionError:
+        raise HTTPException(status_code=500, detail="YOLO pipeline returned unexpected number of results")
+
     denoised = run_denoise(images)
     sr = run_sr(images)
     ocr_text = run_ocr(images)

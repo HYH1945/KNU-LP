@@ -1,0 +1,15 @@
+
+yolo:
+  paths:
+    weights   : "./pipeline/plate_cropper/weights/best.pt"
+    dummy     : "./pipeline/plate_cropper/dummy/dummy.jpg"
+
+  model:
+    device    : "cuda"       # "cuda" | "cpu"
+    conf_thr  : 0.25        # 탐지 신뢰도 임계값
+    iou_thr   : 0.45         # NMS IoU 임계값
+    imgsz     : 640          # 추론 입력 해상도
+
+  plate:
+    output_width : 335
+    output_height: 170
