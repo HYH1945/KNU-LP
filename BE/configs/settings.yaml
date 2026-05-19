@@ -13,3 +13,14 @@ yolo:
   plate:
     output_width : 335
     output_height: 170
+  
+denoiser:
+  paths:
+    weights      : "./pipeline/denoiser/weights/best_model.pt"
+
+  model:
+    device       : "cuda"      # "cuda" | "cpu"
+    in_channels  : 1           # grayscale 학습 모델
+    depth        : 17
+    features     : 64
+    image_size   : [48, 128]   # [H, W] — 모델 입력 해상도

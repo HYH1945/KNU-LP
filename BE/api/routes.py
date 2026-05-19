@@ -9,6 +9,8 @@ from pipeline.types import UploadedImage
 from pipeline.yolo import run_yolo
 from schemas import AnalyzeResponse
 
+from pipeline.utils import *
+
 router = APIRouter()
 
 
@@ -43,7 +45,7 @@ async def analyze_images(files: list[UploadFile] | None = File(default=None)) ->
     except AssertionError:
         raise HTTPException(status_code=500, detail="YOLO pipeline returned unexpected number of results")
 
-    denoised = run_denoise(images)
+    denoised = run_denoise(url_to_image(yolo_crops))
     sr = run_sr(images)
     ocr_text = run_ocr(images)
 
