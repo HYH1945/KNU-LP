@@ -1,0 +1,89 @@
+.trimmerWrapper {
+  border: 1px solid #444;
+  background: #111;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  color: #eee;
+  font-weight: bold;
+}
+
+.clearBtn {
+  background: rgba(255,0,0,0.8);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.videoPlayer {
+  width: 100%;
+  max-height: 350px;
+  background: #000;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.controls {
+  background: #222;
+  padding: 12px;
+  border-radius: 6px;
+  color: #ccc;
+}
+
+.timeInputs {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.timeBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.timeBox label {
+  font-size: 14px;
+  color: #888;
+}
+
+.timeBox input {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #333;
+  color: #fff;
+  font-size: 16px;
+}
+
+.timeBox button {
+  padding: 8px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.timeBox button:hover {
+  background: #357abd;
+}
+
+.summary {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 16px;
+  color: #fff;
+}
