@@ -2,19 +2,37 @@
 
 KNU 번호판 인식 데모의 React + Vite 프론트엔드입니다.
 
+## 실행 환경
+
+- Node.js 20 이상 권장
+- npm 사용
+
 ## 실행
 
-```bash
+```
 npm install
 npm run dev
 ```
 
+Vite proxy 설정 때문에 프론트엔드의 `/api` 요청은 자동으로 `http://localhost:8000` 백엔드로 전달됩니다. 따라서 FE 테스트 전에 BE 서버를 먼저 실행해야 합니다.
+
 ## 빌드
 
-```bash
+```
 npm run build
 npm run preview
 ```
+
+## 전체 실행 순서
+
+1. `BE/pipeline/plate_cropper/weights/best.pt`에 YOLO 가중치를 넣습니다.
+2. `BE/pipeline/denoiser/weights/best_model.pt`에 DnCNN 가중치를 넣습니다.
+3. `BE` 디렉터리에서 FastAPI 서버를 실행합니다.
+4. `FE` 디렉터리에서 Vite 개발 서버를 실행합니다.
+5. 브라우저에서 `http://127.0.0.1:5173`에 접속합니다.
+6. 이미지 또는 영상을 업로드하고 `Analyze`를 누릅니다.
+
+BE 서버 실행 방법과 가중치 위치는 `BE/readme.md`를 참고합니다.
 
 ## 동작 요약
 
@@ -60,6 +78,23 @@ npm run preview
 | `denoised` | 디노이징 결과 |
 | `sr` | SR 결과 또는 SR 생략 시 입력 통과 결과 |
 | `ocr_text` | OCR 결과 문자열 |
+
+## 구현 상태
+
+| 항목 | 상태 |
+|---|---|
+| 이미지 업로드 처리 | 구현됨 |
+| 영상 업로드 처리 | 구현됨 |
+| 영상 프레임 추출 결과 표시 | 구현됨 |
+| YOLO 번호판 crop/highlight 결과 표시 | 구현됨 |
+| 5장 선정 결과 표시 | YOLO 이후 original plate bbox 면적 기준 |
+| INPUT preview | 앞 5장 표시 및 `+N` 생략 표시 구현됨 |
+| HR Width/Height 입력 | 구현됨 |
+| SR 모드 선택 | `auto`, `always`, `skip` 구현됨 |
+| Denoiser 사용 여부 선택 | 구현됨 |
+| Detail 모달 | 이미지 크기와 original plate bbox 표시 |
+| SR | 백엔드 stub 결과 표시 |
+| OCR | 백엔드 stub 결과 표시 |
 
 ## 더미 모드
 
