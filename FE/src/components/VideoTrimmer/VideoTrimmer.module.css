@@ -1,89 +1,102 @@
 .trimmerWrapper {
-  border: 1px solid #444;
-  background: #111;
-  border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
+  border: 1px solid rgba(28, 43, 65, 0.16);
+  border-radius: 8px;
+  background: #17212d;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 12px;
-  color: #eee;
-  font-weight: bold;
+  color: #eef5fb;
+  font-weight: 700;
 }
 
 .clearBtn {
-  background: rgba(255,0,0,0.8);
-  color: white;
+  padding: 7px 12px;
   border: none;
-  border-radius: 6px;
-  padding: 6px 12px;
+  border-radius: 8px;
+  background: #8e211a;
+  color: white;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .videoPlayer {
   width: 100%;
   max-height: 350px;
-  background: #000;
-  border-radius: 6px;
   margin-bottom: 16px;
+  border-radius: 8px;
+  background: #000;
 }
 
 .controls {
-  background: #222;
   padding: 12px;
-  border-radius: 6px;
-  color: #ccc;
+  border-radius: 8px;
+  background: #222f3d;
+  color: #d8e2ec;
+}
+
+.controlTitle {
+  margin: 0 0 12px;
+  font-weight: 800;
+  color: #ffffff;
 }
 
 .timeInputs {
   display: flex;
   gap: 16px;
-  margin-top: 12px;
 }
 
 .timeBox {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
 }
 
 .timeBox label {
   font-size: 14px;
-  color: #888;
+  color: #b8c6d4;
 }
 
 .timeBox input {
   padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #555;
-  background: #333;
+  border: 1px solid #526477;
+  border-radius: 8px;
+  background: #15202b;
   color: #fff;
   font-size: 16px;
 }
 
 .timeBox button {
   padding: 8px;
-  background: #4a90e2;
-  color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  background: #2f7b8b;
+  color: white;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .timeBox button:hover {
-  background: #357abd;
+  background: #256878;
 }
 
 .summary {
-  margin-top: 16px;
+  margin: 16px 0 0;
   text-align: center;
   font-size: 16px;
   color: #fff;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .timeInputs {
+    flex-direction: column;
+  }
 }

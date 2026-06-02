@@ -1,12 +1,56 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './DetailModal.module.css';
 
-/**
- * Input: {string} stage, {number} index, {object|null} result, {(string|null)[]} previews
- * Output: {{ title: string, content: JSX.Element }|null}
- * Purpose: 선택된 stage와 index에 맞는 상세 모달 본문을 구성한다.
- */
+const getInputImage = (result, previews, index) =>
+  result?.input_preview?.[index] ?? result?.selected_inputs?.[index] ?? previews[index];
+
+const formatPlateBbox = (result, index) => {
+  const bbox = result?.selected_plate_bboxes?.[index];
+  if (!bbox) {
+    return null;
+  }
+  if (!bbox.detected) {
+    return 'Original plate bbox: not detected';
+  }
+
+  const confidence =
+    typeof bbox.confidence === 'number' ? `, conf ${(bbox.confidence * 100).toFixed(1)}%` : '';
+  return `Original plate bbox: ${bbox.width} x ${bbox.height} (area ${bbox.area}${confidence})`;
+};
+
+function ImageWithDimensions({ className, src, alt, details = [] }) {
+  const [dimensions, setDimensions] = useState(null);
+
+  useEffect(() => {
+    setDimensions(null);
+  }, [src]);
+
+  return (
+    <div className={styles.imageBlock}>
+      <img
+        className={className}
+        src={src}
+        alt={alt}
+        onLoad={(event) => {
+          setDimensions({
+            width: event.currentTarget.naturalWidth,
+            height: event.currentTarget.naturalHeight,
+          });
+        }}
+      />
+      <p className={styles.dimensionText}>
+        {dimensions ? `${dimensions.width} x ${dimensions.height}` : 'Loading size...'}
+      </p>
+      {details.filter(Boolean).map((detail) => (
+        <p key={detail} className={styles.detailText}>
+          {detail}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 const getModalContent = (stage, index, result, previews) => {
   if (!result && stage !== 'INPUT') {
     return null;
@@ -16,30 +60,38 @@ const getModalContent = (stage, index, result, previews) => {
     return {
       title: `INPUT ${index + 1}`,
       content: (
-        <img className={styles.singleImage} src={previews[index]} alt={`input-detail-${index + 1}`} />
+        <ImageWithDimensions
+          className={styles.singleImage}
+          src={getInputImage(result, previews, index)}
+          alt={`input-detail-${index + 1}`}
+        />
       ),
     };
   }
 
   if (stage === 'YOLO') {
+    const plateBbox = formatPlateBbox(result, index);
+
     return {
       title: `YOLO Crop ${index + 1}`,
       content: (
         <div className={styles.compareGrid}>
           <div className={styles.compareCard}>
-            <p className={styles.compareLabel}>선택된 부분</p>
-            <img
+            <p className={styles.compareLabel}>Selected</p>
+            <ImageWithDimensions
               className={styles.compareImage}
               src={result.yolo_selected[index]}
-              alt={`input-compare-${index + 1}`}
+              alt={`selected-compare-${index + 1}`}
+              details={[plateBbox]}
             />
           </div>
           <div className={styles.compareCard}>
-            <p className={styles.compareLabel}>크롭된 부분</p>
-            <img
+            <p className={styles.compareLabel}>Crop</p>
+            <ImageWithDimensions
               className={styles.compareImage}
               src={result.yolo_crops[index]}
-              alt={`input-compare-${index + 1}`}
+              alt={`crop-compare-${index + 1}`}
+              details={[plateBbox]}
             />
           </div>
         </div>
@@ -48,24 +100,28 @@ const getModalContent = (stage, index, result, previews) => {
   }
 
   if (stage === 'Denoised') {
+    const plateBbox = formatPlateBbox(result, index);
+
     return {
       title: `Denoised ${index + 1}`,
       content: (
         <div className={styles.compareGrid}>
           <div className={styles.compareCard}>
-            <p className={styles.compareLabel}>원본</p>
-            <img
+            <p className={styles.compareLabel}>Crop</p>
+            <ImageWithDimensions
               className={styles.compareImage}
               src={result.yolo_crops[index]}
-              alt={`input-compare-${index + 1}`}
+              alt={`crop-denoise-${index + 1}`}
+              details={[plateBbox]}
             />
           </div>
           <div className={styles.compareCard}>
             <p className={styles.compareLabel}>Denoised</p>
-            <img
+            <ImageWithDimensions
               className={styles.compareImage}
               src={result.denoised[index]}
               alt={`denoised-detail-${index + 1}`}
+              details={[plateBbox]}
             />
           </div>
         </div>
@@ -74,21 +130,29 @@ const getModalContent = (stage, index, result, previews) => {
   }
 
   if (stage === 'SR') {
+    const plateBbox = formatPlateBbox(result, index);
+
     return {
       title: `SR ${index + 1}`,
       content: (
         <div className={styles.compareGrid}>
           <div className={styles.compareCard}>
-            <p className={styles.compareLabel}>LR</p>
-            <img
+            <p className={styles.compareLabel}>Denoised</p>
+            <ImageWithDimensions
               className={styles.compareImage}
               src={result.denoised[index]}
               alt={`lr-detail-${index + 1}`}
+              details={[plateBbox]}
             />
           </div>
           <div className={styles.compareCard}>
             <p className={styles.compareLabel}>SR</p>
-            <img className={styles.compareImage} src={result.sr[index]} alt={`sr-detail-${index + 1}`} />
+            <ImageWithDimensions
+              className={styles.compareImage}
+              src={result.sr[index]}
+              alt={`sr-detail-${index + 1}`}
+              details={[plateBbox]}
+            />
           </div>
         </div>
       ),
@@ -98,16 +162,6 @@ const getModalContent = (stage, index, result, previews) => {
   return null;
 };
 
-/**
- * Input: {{
- *   modalInfo: null|{ stage: string, index: number, triggerRef: { current: HTMLElement|null } },
- *   result: object|null,
- *   previews: (string|null)[],
- *   onClose: ()=>void
- * }}
- * Output: {JSX.Element|null}
- * Purpose: 포털 기반 상세 모달을 렌더링하고 접근성/포커스를 제어한다.
- */
 export default function DetailModal({ modalInfo, result, previews, onClose }) {
   const closeButtonRef = useRef(null);
 
@@ -131,6 +185,7 @@ export default function DetailModal({ modalInfo, result, previews, onClose }) {
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleKeyDown);
+      modalInfo.triggerRef?.current?.focus();
     };
   }, [modalInfo, onClose]);
 
@@ -165,7 +220,7 @@ export default function DetailModal({ modalInfo, result, previews, onClose }) {
             aria-label="close-detail-modal"
             onClick={onClose}
           >
-            ×
+            x
           </button>
         </div>
         <div className={styles.body}>{modalContent.content}</div>

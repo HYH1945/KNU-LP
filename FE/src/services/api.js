@@ -1,27 +1,34 @@
 import { DUMMY_RESPONSE, USE_DUMMY } from '../constants/dummy';
 
-/**
- * Input: {unknown} response
- * Output: {void}
- * Purpose: 파이프라인 응답의 5개 고정 길이 배열 스키마를 검증한다.
- */
 const validateResponseShape = (response) => {
-  const targetKeys = ['yolo_crops', 'yolo_selected', 'denoised', 'sr'];
+  const targetKeys = ['input_preview', 'selected_inputs', 'yolo_crops', 'yolo_selected', 'denoised', 'sr'];
   const isValid = targetKeys.every(
     (key) => Array.isArray(response?.[key]) && response[key].length === 5,
   );
+  const hasBboxMetadata =
+    Array.isArray(response?.selected_plate_bboxes) &&
+    response.selected_plate_bboxes.length === 5;
 
-  if (!isValid) {
+  if (
+    !isValid ||
+    !hasBboxMetadata ||
+    typeof response?.ocr_text !== 'string' ||
+    typeof response?.input_omitted_count !== 'number'
+  ) {
     throw new Error('invalid response shape');
   }
 };
 
-/**
- * Input: {(File|null)[]} files
- * Output: {Promise<object>}
- * Purpose: 더미 모드 또는 실서버 모드에서 번호판 분석 결과를 반환한다.
- */
-export const analyzeImages = async (files) => {
+export const analyzeMedia = async ({
+  files,
+  inputMode,
+  hrWidth,
+  hrHeight,
+  videoStart,
+  videoEnd,
+  srMode,
+  denoiseEnabled,
+}) => {
   if (USE_DUMMY) {
     const dummyResponse = await new Promise((resolve) => {
       window.setTimeout(() => resolve(DUMMY_RESPONSE), 800);
@@ -32,9 +39,19 @@ export const analyzeImages = async (files) => {
   }
 
   const formData = new FormData();
-  files.forEach((file) => {
+  files.filter(Boolean).forEach((file) => {
     formData.append('files', file);
   });
+  formData.append('input_mode', inputMode);
+  formData.append('hr_width', String(hrWidth));
+  formData.append('hr_height', String(hrHeight));
+  formData.append('sr_mode', srMode);
+  formData.append('denoise_enabled', String(denoiseEnabled));
+
+  if (inputMode === 'video') {
+    formData.append('video_start', String(videoStart));
+    formData.append('video_end', String(videoEnd));
+  }
 
   const response = await fetch('/api/analyze', {
     method: 'POST',
@@ -42,10 +59,23 @@ export const analyzeImages = async (files) => {
   });
 
   if (!response.ok) {
-    throw new Error(`request failed: ${response.status}`);
+    const errorText = await response.text();
+    throw new Error(errorText || `request failed: ${response.status}`);
   }
 
   const payload = await response.json();
   validateResponseShape(payload);
   return payload;
 };
+
+export const analyzeImages = async (files) =>
+  analyzeMedia({
+    files,
+    inputMode: 'image',
+    hrWidth: 335,
+    hrHeight: 170,
+    videoStart: 0,
+    videoEnd: 3,
+    srMode: 'auto',
+    denoiseEnabled: true,
+  });

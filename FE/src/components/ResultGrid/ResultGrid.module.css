@@ -1,9 +1,9 @@
 .panel {
   padding: 24px;
-  border: 1px solid rgba(94, 58, 36, 0.15);
-  border-radius: 28px;
-  background: rgba(255, 251, 245, 0.92);
-  box-shadow: 0 20px 50px rgba(43, 32, 17, 0.08);
+  border: 1px solid rgba(28, 43, 65, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 45px rgba(25, 37, 56, 0.08);
 }
 
 .header {
@@ -17,7 +17,7 @@
 
 .text {
   margin: 0;
-  color: #665e54;
+  color: #5b6470;
   line-height: 1.5;
 }
 
@@ -36,7 +36,7 @@
 .label {
   padding-top: 10px;
   font-weight: 800;
-  color: #6e3414;
+  color: #16666f;
 }
 
 .cells {
@@ -49,9 +49,9 @@
   position: relative;
   overflow: hidden;
   min-height: 150px;
-  border: 1px solid rgba(98, 63, 37, 0.18);
-  border-radius: 20px;
-  background: linear-gradient(180deg, #fff9f1 0%, #f2ebdf 100%);
+  border: 1px solid rgba(28, 43, 65, 0.14);
+  border-radius: 8px;
+  background: #eef3f8;
 }
 
 .image,
@@ -67,7 +67,7 @@
 .empty {
   display: grid;
   place-items: center;
-  color: #7a6f65;
+  color: #6b7683;
 }
 
 .overlay {
@@ -75,9 +75,26 @@
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(17, 14, 10, 0.32);
+  background: rgba(14, 22, 31, 0.36);
   opacity: 0;
   transition: opacity 160ms ease;
+}
+
+.omittedBadge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(14, 22, 31, 0.82);
+  color: #ffffff;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .cell:hover .overlay,
@@ -88,9 +105,9 @@
 .detailButton {
   padding: 9px 16px;
   border: 0;
-  border-radius: 999px;
-  background: rgba(255, 248, 239, 0.95);
-  color: #2b221b;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #17212d;
   font-weight: 800;
   cursor: pointer;
 }

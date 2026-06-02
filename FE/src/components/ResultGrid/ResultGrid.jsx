@@ -2,32 +2,20 @@ import { createRef, useRef } from 'react';
 import styles from './ResultGrid.module.css';
 
 const ROWS = [
-  { label: 'INPUT', stage: 'INPUT', getImages: ({ previews }) => previews },
+  {
+    label: 'INPUT',
+    stage: 'INPUT',
+    getImages: ({ result, previews }) => result?.input_preview ?? result?.selected_inputs ?? previews,
+  },
   { label: 'YOLO Crop', stage: 'YOLO', getImages: ({ result }) => result.yolo_crops },
   { label: 'Denoised', stage: 'Denoised', getImages: ({ result }) => result.denoised },
   { label: 'SR', stage: 'SR', getImages: ({ result }) => result.sr },
 ];
 
-/**
- * Input: {number} count
- * Output: {{ current: HTMLButtonElement|null }[]}
- * Purpose: 셀 상세 보기 버튼 포커스 복귀용 ref 묶음을 생성한다.
- */
 const createTriggerRefs = (count) => Array.from({ length: count }, () => createRef());
 
-/**
- * Input: {{
- *   result: {
- *     yolo_crops: string[],
- *     denoised: string[],
- *     sr: string[]
- *   },
- *   previews: (string|null)[],
- *   onDetailOpen: (info:{stage:string, index:number, triggerRef:{ current: HTMLButtonElement|null }})=>void
- * }}
- * Output: {JSX.Element}
- * Purpose: 4행 5열 파이프라인 결과 그리드와 상세 버튼을 렌더링한다.
- */
+const normalizeSlots = (images) => Array.from({ length: 5 }, (_, index) => images?.[index] ?? null);
+
 export default function ResultGrid({ result, previews, onDetailOpen }) {
   const triggerRefs = useRef(
     ROWS.reduce((accumulator, row) => {
@@ -40,12 +28,16 @@ export default function ResultGrid({ result, previews, onDetailOpen }) {
     <section className={styles.panel}>
       <div className={styles.header}>
         <h2 className={styles.title}>Pipeline Grid</h2>
-        <p className={styles.text}>입력과 각 후처리 단계를 열별로 나란히 비교할 수 있습니다.</p>
+        <p className={styles.text}>입력과 각 처리 단계를 5개 슬롯 기준으로 비교합니다.</p>
       </div>
 
       <div className={styles.rows}>
         {ROWS.map((row) => {
-          const images = row.getImages({ result, previews });
+          const images = normalizeSlots(row.getImages({ result, previews }));
+          const omittedCount =
+            row.stage === 'INPUT'
+              ? result?.input_omitted_count ?? Math.max(0, (previews?.length ?? 0) - 5)
+              : 0;
 
           return (
             <div key={row.stage} className={styles.row}>
@@ -65,6 +57,9 @@ export default function ResultGrid({ result, previews, onDetailOpen }) {
                       ) : (
                         <div className={styles.empty}>No image</div>
                       )}
+                      {omittedCount > 0 && index === images.length - 1 ? (
+                        <span className={styles.omittedBadge}>+{omittedCount}</span>
+                      ) : null}
                       <div className={styles.overlay}>
                         <button
                           ref={buttonRef}
