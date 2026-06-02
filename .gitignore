@@ -1,0 +1,24 @@
+.codex-run/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Frontend
+FE/node_modules/
+FE/dist/
+FE/.npm-cache/
+
+# Local model weights
+*.pt
+*.pth
+*.onnx
+
+# Local media/test artifacts
+*.mp4
+*.avi
+*.mov
+*.mkv
+AI/Task_1/denoiser/pipeline/input.png
+AI/Task_1/denoiser/pipeline/output.png
