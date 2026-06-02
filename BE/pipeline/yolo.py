@@ -1,14 +1,20 @@
-"""YOLO pipeline stub."""
+"""YOLO plate crop/highlight adapter."""
 
 from pipeline.types import UploadedImage
 from pipeline.utils import image_to_url
 
-from pipeline.plate_cropper.image_processor import image_cropper
-from pipeline.plate_cropper.image_processor import image_highlighter
 
 def run_yolo(images: list[UploadedImage]) -> tuple[list[str], list[str]]:
-    """Input: list[UploadedImage] images. Output: tuple[list[str], list[str]]. Purpose: return dummy YOLO crop and selected-region payloads using shared data URL conversion."""
+    """Run YOLO cropper when available, otherwise keep the pipeline usable."""
 
-    cropped_image = image_cropper(images)
-    highlighted_image = image_highlighter(images)
-    return cropped_image, highlighted_image
+    try:
+        from pipeline.plate_cropper.image_processor import image_cropper
+        from pipeline.plate_cropper.image_processor import image_highlighter
+
+        cropped_images = image_cropper(images)
+        highlighted_images = image_highlighter(images)
+        return cropped_images, highlighted_images
+    except Exception as exc:
+        print(f"[YOLO] fallback to original images: {exc}")
+        fallback = image_to_url(images)
+        return fallback, fallback

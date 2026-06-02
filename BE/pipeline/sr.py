@@ -1,10 +1,15 @@
-"""Super-resolution pipeline stub."""
+"""Backward-compatible SR wrapper."""
 
+from pipeline.superresolution.sr_model import run_sr as _run_sr
+from pipeline.types import PipelineOptions
 from pipeline.types import UploadedImage
-from pipeline.utils import image_to_url
 
 
-def run_sr(images: list[UploadedImage]) -> list[str]:
-    """Input: list[UploadedImage] images. Output: list[str]. Purpose: return dummy super-resolution payloads using shared data URL conversion."""
+def run_sr(
+    images: list[UploadedImage],
+    placeholder_hr: UploadedImage | None = None,
+    options: PipelineOptions | None = None,
+) -> list[str]:
+    """Run the current SR adapter with defaults for older callers."""
 
-    return image_to_url(images)
+    return _run_sr(images, placeholder_hr, options or PipelineOptions())
