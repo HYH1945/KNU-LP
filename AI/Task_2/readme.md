@@ -1,0 +1,3 @@
+1. SR model source code Update 예정
+2. 소스 코드를 제외한 다른 파일들은 너무 무거워서 올리기 불가능
+3. SR model에서 parseq permutate 빼고 속도 빠르게 튜닝 예정
