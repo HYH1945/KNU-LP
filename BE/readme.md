@@ -2,12 +2,38 @@
 
 KNU 번호판 인식 데모의 FastAPI 백엔드입니다.
 
-## 실행
+## 실행 환경
 
-```bash
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+- Python 3.10 권장
+- CUDA가 없으면 YOLO와 DnCNN은 코드에서 CPU로 자동 전환됩니다.
+
+
+## 의존성 설치
+
+주요 의존성은 `fastapi`, `uvicorn`, `python-multipart`, `opencv-python`, `torch`, `ultralytics`입니다.
+
+requirements.txt 참조
+
+## 가중치 파일 위치
+
+가중치 파일은 Git에 올리지 않습니다. 해당하는 경로에 best.pt, best_model.pt 를 넣으세요.
+
+```text
+BE/
+└── pipeline/
+    ├── plate_cropper/
+    │   └── weights/
+    │       └── best.pt
+    └── denoiser/
+        └── weights/
+            └── best_model.pt
 ```
+
+- YOLO 번호판 검출 가중치: `BE/pipeline/plate_cropper/weights/best.pt`
+- DnCNN 디노이징 가중치: `BE/pipeline/denoiser/weights/best_model.pt`
+
+설정 파일은 `BE/configs/settings.yaml`입니다.
+
 
 ## API
 
@@ -78,7 +104,23 @@ BE/pipeline/
     └── ensemble.py
 ```
 
-## 현재 구현 상태
+## 구현 상태
+
+| 항목 | 상태 |
+|---|---|
+| 이미지 업로드 처리 | 구현됨 |
+| 영상 업로드 처리 | 구현됨 |
+| 영상 프레임 추출 | 구현됨 |
+| YOLO 번호판 crop/highlight | 실제 모델 연결됨 |
+| 5장 선정 | YOLO 이후 original plate bbox 면적 기준으로 구현됨 |
+| INPUT preview | 앞 5장 표시 및 `+N` 생략 표시 구현됨 |
+| HR Width/Height 기반 자동 분기 | original bbox area 기준으로 구현됨 |
+| DnCNN denoiser | 실제 가중치로 동작 확인됨 |
+| SR | 현재 bicubic resize stub |
+| OCR | 현재 stub |
+| OCR ensemble | 구조 구현됨. 실제 OCR 연결 후 의미 있는 voting 가능 |
+
+## 현재 구현상 주의사항
 
 - YOLO와 DnCNN denoiser는 가중치가 없거나 로드에 실패하면 입력 이미지를 그대로 통과시키는 fallback을 사용합니다.
 - SR은 현재 bicubic resize stub입니다. 실제 SR 모델은 `pipeline/superresolution/sr_model.py`의 `run_sr()`에 연결하면 됩니다.
