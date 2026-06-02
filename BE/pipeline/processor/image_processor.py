@@ -7,47 +7,51 @@ import cv2
 from pipeline.types import PipelineOptions
 from pipeline.types import SelectedCandidate
 from pipeline.types import UploadedImage
+from pipeline.types import YoloCandidate
 from pipeline.utils import decode_image
 from pipeline.utils import image_dimensions
 from pipeline.utils import opencv_to_uploaded
-from pipeline.utils import pad_uploaded_images
-from pipeline.utils import url_to_image
 
 
 def select_top_candidates(
-    source_images: list[UploadedImage],
-    crop_urls: list[str],
-    highlighted_urls: list[str],
+    yolo_candidates: list[YoloCandidate],
     output_slots: int,
 ) -> list[SelectedCandidate]:
-    """Pair YOLO outputs with source frames and keep the highest-resolution crops."""
+    """Keep the best YOLO crops by original plate bbox area."""
 
-    if not source_images:
+    if not yolo_candidates:
         raise ValueError("at least one input image is required")
 
-    crops = url_to_image(crop_urls)
-    highlighted = url_to_image(highlighted_urls)
-    crops = pad_uploaded_images(crops or source_images, len(source_images))
-    highlighted = pad_uploaded_images(highlighted or source_images, len(source_images))
-
     candidates: list[SelectedCandidate] = []
-    for index, source in enumerate(source_images):
-        crop = crops[min(index, len(crops) - 1)]
-        selected = highlighted[min(index, len(highlighted) - 1)]
-        width, height = image_dimensions(crop)
+    for yolo_candidate in yolo_candidates:
+        width, height = image_dimensions(yolo_candidate.crop)
+        ranking_area = yolo_candidate.detection_area if yolo_candidate.detected else 0
         candidates.append(
             SelectedCandidate(
-                source=source,
-                crop=crop,
-                highlighted=selected,
-                width=width,
-                height=height,
-                area=width * height,
-                source_index=index,
+                source=yolo_candidate.source,
+                crop=yolo_candidate.crop,
+                highlighted=yolo_candidate.highlighted,
+                width=yolo_candidate.crop_width or width,
+                height=yolo_candidate.crop_height or height,
+                area=ranking_area,
+                detected=yolo_candidate.detected,
+                detection_area=yolo_candidate.detection_area,
+                bbox_width=yolo_candidate.bbox_width,
+                bbox_height=yolo_candidate.bbox_height,
+                confidence=yolo_candidate.confidence,
+                source_index=yolo_candidate.source_index,
             )
         )
 
-    candidates.sort(key=lambda item: item.area, reverse=True)
+    candidates.sort(
+        key=lambda item: (
+            item.detected,
+            item.area,
+            item.confidence,
+            -item.source_index,
+        ),
+        reverse=True,
+    )
     selected = candidates[:output_slots]
     while len(selected) < output_slots:
         selected.append(selected[-1])
@@ -55,10 +59,13 @@ def select_top_candidates(
 
 
 def get_high_resolution_count(candidates: list[SelectedCandidate], options: PipelineOptions) -> int:
-    """Count crops whose area is greater than the user-defined HR threshold."""
+    """Count detected plate bboxes whose area is greater than the HR threshold."""
 
     threshold = int(options.hr_width * options.hr_height * 0.8)
-    return sum(candidate.area > threshold for candidate in candidates)
+    return sum(
+        candidate.detected and candidate.detection_area > threshold
+        for candidate in candidates
+    )
 
 
 def should_use_sr(candidates: list[SelectedCandidate], options: PipelineOptions) -> bool:

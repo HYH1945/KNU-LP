@@ -18,8 +18,9 @@ if str(MODULE_ROOT) not in sys.path:
     sys.path.insert(0, str(MODULE_ROOT))
 
 from pipeline.types import UploadedImage
-from pipeline.utils import opencv_to_url
 from pipeline.utils import image_to_url
+from pipeline.utils import opencv_to_uploaded
+from pipeline.utils import opencv_to_url
 
 from modules.plate_segmenter import PlateSegmenter
 from modules.perspective_aligner import PerspectiveAligner
@@ -97,57 +98,92 @@ def _select_best_detection(detections: list):
     return max(detections, key=lambda det: det.conf)
 
 
-def image_highlighter(images: list[UploadedImage]) -> list[str]:
-    """Input: list[UploadedImage] images. Output: list[str]. Purpose: return highlighted image data"""
+def _bbox_size(detection) -> tuple[int, int]:
+    x1, y1, x2, y2 = detection.bbox_xyxy
+    return max(0, int(x2 - x1)), max(0, int(y2 - y1))
 
-    segmenter, _ = _get_models()
-    highlighted_urls: list[str] = []
-    dummy_url = image_to_url([_get_dummy_image()])[0]
 
-    for image in images:
+def _bbox_area(detection) -> int:
+    width, height = _bbox_size(detection)
+    return width * height
+
+
+def process_images(images: list[UploadedImage]) -> list[dict]:
+    """Run YOLO once per image and return crop/highlight metadata together."""
+
+    segmenter, aligner = _get_models()
+    dummy_image = _get_dummy_image()
+    dummy_url = image_to_url([dummy_image])[0]
+    results: list[dict] = []
+
+    for index, image in enumerate(images):
         frame = _decode_uploaded_image(image)
+        fallback = {
+            "crop_url": dummy_url,
+            "highlighted_url": dummy_url,
+            "detected": False,
+            "detection_area": 0,
+            "bbox_width": 0,
+            "bbox_height": 0,
+            "crop_width": 0,
+            "crop_height": 0,
+            "confidence": 0.0,
+            "source_index": index,
+        }
         if frame is None:
-            highlighted_urls.append(dummy_url)
+            results.append(fallback)
             continue
 
         detections = segmenter.detect(frame)
         best_detection = _select_best_detection(detections)
         if best_detection is None:
-            highlighted_urls.append(dummy_url)
+            results.append(fallback)
             continue
 
         highlighted = _draw_detections(frame, [best_detection])
-        highlighted_urls.append(opencv_to_url(highlighted))
+        highlighted_url = opencv_to_url(highlighted)
+        align_result = aligner.align(frame, best_detection)
+        if not align_result.success or align_result.warped is None:
+            fallback["highlighted_url"] = highlighted_url
+            fallback["detection_area"] = _bbox_area(best_detection)
+            bbox_width, bbox_height = _bbox_size(best_detection)
+            fallback["bbox_width"] = bbox_width
+            fallback["bbox_height"] = bbox_height
+            fallback["confidence"] = float(best_detection.conf)
+            results.append(fallback)
+            continue
 
-    return highlighted_urls
+        crop = opencv_to_uploaded(align_result.warped)
+        crop_height, crop_width = align_result.warped.shape[:2]
+        bbox_width, bbox_height = _bbox_size(best_detection)
+        results.append(
+            {
+                "crop_url": image_to_url([crop])[0],
+                "highlighted_url": highlighted_url,
+                "detected": True,
+                "detection_area": bbox_width * bbox_height,
+                "bbox_width": bbox_width,
+                "bbox_height": bbox_height,
+                "crop_width": crop_width,
+                "crop_height": crop_height,
+                "confidence": float(best_detection.conf),
+                "source_index": index,
+            }
+        )
+
+    return results
+
+
+def image_highlighter(images: list[UploadedImage]) -> list[str]:
+    """Input: list[UploadedImage] images. Output: list[str]. Purpose: return highlighted image data"""
+
+    return [result["highlighted_url"] for result in process_images(images)]
 
 
 def image_cropper(images: list[UploadedImage]) -> list[str]:
     """Input: list[UploadedImage] images. Output: list[str]. Purpose: return cropped image data"""
 
-    segmenter, aligner = _get_models()
-    cropped_urls: list[str] = []
-    dummy_url = image_to_url([_get_dummy_image()])[0]
-
-    for image in images:
-        frame = _decode_uploaded_image(image)
-        if frame is None:
-            cropped_urls.append(dummy_url)
-            continue
-
-        detections = segmenter.detect(frame)
-        best_detection = _select_best_detection(detections)
-        if best_detection is None:
-            cropped_urls.append(dummy_url)
-            continue
-
-        align_result = aligner.align(frame, best_detection)
-        if not align_result.success or align_result.warped is None:
-            cropped_urls.append(dummy_url)
-            continue
-        cropped_urls.append(opencv_to_url(align_result.warped))
-
-    return cropped_urls
+    return [result["crop_url"] for result in process_images(images)]
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ from pipeline.superresolution.sr_model import run_sr
 from pipeline.types import PipelineOptions
 from pipeline.types import UploadedImage
 from pipeline.utils import image_to_url
+from pipeline.utils import pad_uploaded_images
 from pipeline.utils import url_to_image
 from pipeline.yolo import run_yolo
 
@@ -22,11 +23,9 @@ def run_analyze_pipeline(uploaded_files: list[UploadedImage], options: PipelineO
     """Run preprocess -> denoise -> SR/OCR route -> OCR."""
 
     source_images = _prepare_sources(uploaded_files, options)
-    yolo_crops, yolo_selected = run_yolo(source_images)
+    yolo_candidates = run_yolo(source_images)
     candidates = select_top_candidates(
-        source_images=source_images,
-        crop_urls=yolo_crops,
-        highlighted_urls=yolo_selected,
+        yolo_candidates=yolo_candidates,
         output_slots=options.output_slots,
     )
 
@@ -54,7 +53,11 @@ def run_analyze_pipeline(uploaded_files: list[UploadedImage], options: PipelineO
         pipeline_route = "ocr_ensemble"
 
     return {
+        "input_preview": image_to_url(_build_input_preview(source_images, options)),
+        "input_omitted_count": max(0, len(source_images) - options.output_slots),
         "selected_inputs": image_to_url([candidate.source for candidate in candidates]),
+        "selected_source_indices": [candidate.source_index for candidate in candidates],
+        "selected_plate_bboxes": [_candidate_bbox(candidate) for candidate in candidates],
         "yolo_crops": image_to_url(crop_images),
         "yolo_selected": image_to_url([candidate.highlighted for candidate in candidates]),
         "denoised": denoised_urls,
@@ -80,3 +83,23 @@ def _prepare_sources(uploaded_files: list[UploadedImage], options: PipelineOptio
         return extract_video_frames(uploaded_files[0], options)
 
     return uploaded_files
+
+
+def _build_input_preview(source_images: list[UploadedImage], options: PipelineOptions) -> list[UploadedImage]:
+    """Return the first source frames for frontend preview slots."""
+
+    preview = source_images[: options.output_slots]
+    return pad_uploaded_images(preview, options.output_slots)
+
+
+def _candidate_bbox(candidate) -> dict:
+    """Expose original-frame YOLO bbox metadata for frontend detail views."""
+
+    return {
+        "detected": candidate.detected,
+        "width": candidate.bbox_width,
+        "height": candidate.bbox_height,
+        "area": candidate.detection_area,
+        "confidence": candidate.confidence,
+        "source_index": candidate.source_index,
+    }

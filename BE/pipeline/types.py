@@ -27,6 +27,23 @@ class PipelineOptions:
 
 
 @dataclass(frozen=True)
+class YoloCandidate:
+    """YOLO crop output and detection metadata for one source frame."""
+
+    source: UploadedImage
+    crop: UploadedImage
+    highlighted: UploadedImage
+    detected: bool
+    detection_area: int
+    bbox_width: int
+    bbox_height: int
+    crop_width: int
+    crop_height: int
+    confidence: float
+    source_index: int
+
+
+@dataclass(frozen=True)
 class SelectedCandidate:
     """Selected source frame, crop, and metadata kept in the same order."""
 
@@ -36,4 +53,9 @@ class SelectedCandidate:
     width: int
     height: int
     area: int
+    detected: bool
+    detection_area: int
+    bbox_width: int
+    bbox_height: int
+    confidence: float
     source_index: int
