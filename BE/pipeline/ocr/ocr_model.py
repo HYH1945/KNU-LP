@@ -17,6 +17,13 @@ from pipeline.utils import decode_image
 MODULE_ROOT = Path(__file__).resolve().parent
 BE_ROOT = MODULE_ROOT.parent.parent
 VENDOR_ROOT = BE_ROOT / "vendors" / "gplpr"
+_LAST_WARNING: str | None = None
+
+
+def get_last_warning() -> str | None:
+    """Return the latest fallback warning emitted by this stage."""
+
+    return _LAST_WARNING
 
 
 class GPLPRLabelConverter:
@@ -49,6 +56,9 @@ def run_single_ocr(image: UploadedImage) -> str:
 def run_batch_ocr(images: list[UploadedImage]) -> list[str]:
     """Run GP-LPR OCR on a batch of cropped plate images."""
 
+    global _LAST_WARNING
+    _LAST_WARNING = None
+
     if not images:
         return []
 
@@ -74,7 +84,8 @@ def run_batch_ocr(images: list[UploadedImage]) -> list[str]:
 
         return [_normalize_prediction(text) for text in predictions]
     except Exception as exc:
-        print(f"[OCR] fallback to UNKNOWN: {exc}")
+        _LAST_WARNING = f"OCR fallback to UNKNOWN: {exc}"
+        print(f"[OCR] {_LAST_WARNING}")
         return ["UNKNOWN" for _ in images]
 
 

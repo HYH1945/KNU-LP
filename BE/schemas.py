@@ -1,6 +1,7 @@
 """Response schemas for the backend API."""
 
 from typing import Annotated
+from typing import Dict
 from typing import List
 
 from pydantic import BaseModel
@@ -44,3 +45,5 @@ class AnalyzeResponse(BaseModel):
     high_resolution_count: int
     hr_width: int
     hr_height: int
+    warnings: List[str]
+    stage_fallbacks: Dict[str, bool]

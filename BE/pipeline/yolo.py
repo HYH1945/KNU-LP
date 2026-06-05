@@ -7,9 +7,20 @@ from pipeline.types import YoloCandidate
 from pipeline.utils import image_dimensions
 from pipeline.utils import url_to_image
 
+_LAST_WARNING: str | None = None
+
+
+def get_last_warning() -> str | None:
+    """Return the latest fallback warning emitted by this stage."""
+
+    return _LAST_WARNING
+
 
 def run_yolo(images: list[UploadedImage]) -> list[YoloCandidate]:
     """Run YOLO cropper when available, otherwise keep the pipeline usable."""
+
+    global _LAST_WARNING
+    _LAST_WARNING = None
 
     try:
         from pipeline.plate_cropper.image_processor import process_images
@@ -19,7 +30,8 @@ def run_yolo(images: list[UploadedImage]) -> list[YoloCandidate]:
             for index, result in enumerate(process_images(images))
         ]
     except Exception as exc:
-        print(f"[YOLO] fallback to original images: {exc}")
+        _LAST_WARNING = f"YOLO fallback to original images: {exc}"
+        print(f"[YOLO] {_LAST_WARNING}")
         return [_fallback_candidate(image, index) for index, image in enumerate(images)]
 
 

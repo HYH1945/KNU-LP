@@ -23,6 +23,13 @@ from pipeline.utils import opencv_to_uploaded
 MODULE_ROOT = Path(__file__).resolve().parent
 BE_ROOT = MODULE_ROOT.parent.parent
 VENDORS_ROOT = BE_ROOT / "vendors"
+_LAST_WARNING: str | None = None
+
+
+def get_last_warning() -> str | None:
+    """Return the latest fallback warning emitted by this stage."""
+
+    return _LAST_WARNING
 
 
 def run_sr(
@@ -32,6 +39,9 @@ def run_sr(
 ) -> list[str]:
     """Run the 5-frame RGDiffSR model and return one SR image URL."""
 
+    global _LAST_WARNING
+    _LAST_WARNING = None
+
     if not images:
         return []
 
@@ -39,7 +49,8 @@ def run_sr(
         sr_image = _run_rgdiffsr(images, placeholder_hr, options)
         return image_to_url([sr_image])
     except Exception as exc:
-        print(f"[SR] fallback to bicubic first crop: {exc}")
+        _LAST_WARNING = f"SR fallback to bicubic first crop: {exc}"
+        print(f"[SR] {_LAST_WARNING}")
         return image_to_url([_bicubic_first(images, options)])
 
 

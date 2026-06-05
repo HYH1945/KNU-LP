@@ -1,13 +1,13 @@
 parseq_settings:
-  eval_parseq_checkpoint_path: '../weights/parseq.pt'
+  eval_parseq_checkpoint_path: '../../pipeline/superresolution/weights/parseq.pt'
   eval_parseq_repo_path: 'parseq'
   eval_parseq_use_format_constraint: false
   prefer_parseq_for_eval: true
   eval_parseq_only: false
   eval_gplpr_enable: true
   eval_gplpr_only: true
-  eval_gplpr_repo_path: '../../ocr/gplpr_vendor'
-  eval_gplpr_checkpoint_path: '../../ocr/weights/best_model.pth'
+  eval_gplpr_repo_path: '../gplpr'
+  eval_gplpr_checkpoint_path: '../../pipeline/ocr/weights/best_model.pth'
   eval_gplpr_alphabet: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   eval_gplpr_imgH: 32
   eval_gplpr_imgW: 96
@@ -40,7 +40,7 @@ model:
     down_sample_rate: 2
     STN_enable: true
     monitor: accuracy
-    ckpt_path: '../weights/SR.ckpt'
+    ckpt_path: '../../pipeline/superresolution/weights/SR.ckpt'
 
     load_only_unet: false
     unet_config:
@@ -80,7 +80,7 @@ model:
         embed_dim: 3
         n_embed: 8192
         monitor: val/rec_loss
-        ckpt_path: '../weights/VQGAN.ckpt'
+        ckpt_path: '../../pipeline/superresolution/weights/VQGAN.ckpt'
         ddconfig:
           double_z: false
           z_channels: 3
@@ -101,7 +101,7 @@ model:
       target: ldm.modules.encoders.tp_generator.PARSeqTPG
       params:
         target_dim: 95
-        checkpoint_path: '../weights/parseq.pt'
+        checkpoint_path: '../../pipeline/superresolution/weights/parseq.pt'
         parseq_repo_path: 'parseq'
         use_format_constraint: false
         freeze_backbone: true

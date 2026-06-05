@@ -33,4 +33,11 @@ export const DUMMY_RESPONSE = {
   high_resolution_count: 0,
   hr_width: 96,
   hr_height: 32,
+  warnings: [],
+  stage_fallbacks: {
+    yolo: false,
+    denoise: false,
+    sr: false,
+    ocr: false,
+  },
 };

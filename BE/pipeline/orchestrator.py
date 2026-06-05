@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from pipeline.denoise import get_last_warning as get_denoise_warning
 from pipeline.denoise import run_denoise
-from pipeline.ocr.ensemble import run_ensemble_ocr
-from pipeline.ocr.ocr_model import run_ocr
+from pipeline.ocr.ensemble import vote_texts
+from pipeline.ocr.ocr_model import get_last_warning as get_ocr_warning
+from pipeline.ocr.ocr_model import run_batch_ocr
 from pipeline.processor.image_processor import get_high_resolution_count
 from pipeline.processor.image_processor import select_top_candidates
 from pipeline.processor.image_processor import should_use_sr
 from pipeline.processor.video_processor import extract_video_frames
+from pipeline.superresolution.sr_model import get_last_warning as get_sr_warning
 from pipeline.superresolution.sr_model import run_sr
 from pipeline.types import PipelineOptions
 from pipeline.types import SelectedCandidate
@@ -17,17 +20,28 @@ from pipeline.utils import image_to_url
 from pipeline.utils import image_dimensions
 from pipeline.utils import pad_uploaded_images
 from pipeline.utils import url_to_image
+from pipeline.yolo import get_last_warning as get_yolo_warning
 from pipeline.yolo import run_yolo
 
 
 def run_analyze_pipeline(uploaded_files: list[UploadedImage], options: PipelineOptions) -> dict:
     """Run preprocess -> denoise -> SR/OCR route -> OCR."""
 
+    warnings: list[str] = []
+    stage_fallbacks = {
+        "yolo": False,
+        "denoise": False,
+        "sr": False,
+        "ocr": False,
+    }
+
     source_images = _prepare_sources(uploaded_files, options)
+    yolo_warning = None
     if options.input_mode == "crop" or _looks_like_pre_cropped(source_images, options):
         candidates = _prepare_crop_candidates(source_images, options)
     else:
         yolo_candidates = run_yolo(source_images)
+        yolo_warning = get_yolo_warning()
         
         # [검증 파이프라인 수동 옵션] is_validation == True 인 경우, 16x(32~48) 크기 필터를 타이트하게 강제 적용
         # (세로 12~20 & 가로 28~54 & 비율 2배 이상 만족하는 것만 검출로 남김)
@@ -57,33 +71,51 @@ def run_analyze_pipeline(uploaded_files: list[UploadedImage], options: PipelineO
         )
 
     crop_images = [candidate.crop for candidate in candidates]
+    _record_stage_warning(warnings, stage_fallbacks, "yolo", yolo_warning)
+
+    denoise_warning = None
     if options.denoise_enabled:
         denoised_urls = run_denoise(crop_images)
-        denoised_images = url_to_image(denoised_urls) or crop_images
+        denoise_warning = get_denoise_warning()
+        denoised_images = url_to_image(denoised_urls)
+        if not denoised_images:
+            denoise_warning = denoise_warning or "Denoiser output decode failed. Fallback to YOLO crops."
+            denoised_images = crop_images
+            denoised_urls = image_to_url(denoised_images)
     else:
         denoised_images = crop_images
         denoised_urls = image_to_url(denoised_images)
 
     if len(denoised_images) != options.output_slots:
+        denoise_warning = (
+            f"Denoiser output count mismatch: expected {options.output_slots}, "
+            f"got {len(denoised_images)}. Fallback to YOLO crops."
+        )
         denoised_images = crop_images
         denoised_urls = image_to_url(denoised_images)
+
+    _record_stage_warning(warnings, stage_fallbacks, "denoise", denoise_warning)
 
     sr_applied = should_use_sr(candidates, options)
     if sr_applied:
         sr_urls = run_sr(denoised_images, denoised_images[0], options)
-        ocr_text = run_ocr(url_to_image(sr_urls) or denoised_images)
+        sr_warning = get_sr_warning()
+        sr_images = url_to_image(sr_urls)
+        if not sr_images:
+            sr_warning = sr_warning or "SR output decode failed. Fallback to first denoised crop."
+            sr_images = denoised_images[:1]
+            sr_urls = image_to_url(sr_images)
+        _record_stage_warning(warnings, stage_fallbacks, "sr", sr_warning)
+        yolo_ocr_preds = run_batch_ocr(sr_images)
+        ocr_text = yolo_ocr_preds[0] if yolo_ocr_preds else "UNKNOWN"
         pipeline_route = "sr_then_ocr"
     else:
         sr_urls = image_to_url(denoised_images)
-        ocr_text = run_ensemble_ocr(denoised_images)
+        yolo_ocr_preds = run_batch_ocr(denoised_images)
+        ocr_text = vote_texts(yolo_ocr_preds)
         pipeline_route = "ocr_ensemble"
 
-    from pipeline.ocr.ocr_model import run_batch_ocr
-    if sr_applied:
-        sr_images = url_to_image(sr_urls) or denoised_images
-        yolo_ocr_preds = run_batch_ocr(sr_images)
-    else:
-        yolo_ocr_preds = run_batch_ocr(denoised_images)
+    _record_stage_warning(warnings, stage_fallbacks, "ocr", get_ocr_warning())
 
     return {
         "input_preview": image_to_url(_build_input_preview(source_images, options)),
@@ -102,6 +134,8 @@ def run_analyze_pipeline(uploaded_files: list[UploadedImage], options: PipelineO
         "high_resolution_count": get_high_resolution_count(candidates, options),
         "hr_width": options.hr_width,
         "hr_height": options.hr_height,
+        "warnings": warnings,
+        "stage_fallbacks": stage_fallbacks,
     }
 
 
@@ -183,3 +217,15 @@ def _candidate_bbox(candidate) -> dict:
         "confidence": candidate.confidence,
         "source_index": candidate.source_index,
     }
+
+
+def _record_stage_warning(
+    warnings: list[str],
+    stage_fallbacks: dict[str, bool],
+    stage: str,
+    warning: str | None,
+) -> None:
+    if not warning:
+        return
+    stage_fallbacks[stage] = True
+    warnings.append(warning)

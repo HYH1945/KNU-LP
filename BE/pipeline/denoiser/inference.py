@@ -7,6 +7,7 @@ DnCNN Inference
 
 from __future__ import annotations
 from pathlib import Path
+import os
 import sys
 
 import cv2
@@ -36,6 +37,17 @@ def _resolve_weights_path(weights: str) -> str:
     return str(BE_ROOT / weights_path)
 
 
+def _resolve_test_image_path() -> Path | None:
+    if len(sys.argv) >= 2:
+        return Path(sys.argv[1]).expanduser().resolve()
+
+    env_path = os.environ.get("KNU_LP_DENOISER_TEST_IMAGE")
+    if env_path:
+        return Path(env_path).expanduser().resolve()
+
+    return None
+
+
 # ---------------------------------------------------------------------- #
 def build_and_load_model(cfg: dict) -> nn.Module:
     """
@@ -60,7 +72,12 @@ def build_and_load_model(cfg: dict) -> nn.Module:
     if not weights_path.exists():
         raise FileNotFoundError(f"가중치 파일 없음: {weights_path}")
 
-    state_dict = torch.load(weights_path, map_location=device)
+    try:
+        state_dict = torch.load(weights_path, map_location=device, weights_only=True)
+    except TypeError:
+        state_dict = torch.load(weights_path, map_location=device)
+    except Exception:
+        state_dict = torch.load(weights_path, map_location=device)
     model.load_state_dict(state_dict)
     model.to(device)
     model.eval()
@@ -126,21 +143,23 @@ if __name__ == "__main__":
 
     model = build_and_load_model(cfg)
     
-    test_img_path = Path("C:/Users/jech0/Desktop/projects/KNU-LP/AI/Task_1/denoiser/data/dataset_color/test/noisy/0000.png")
-    if test_img_path.exists():
+    test_img_path = _resolve_test_image_path()
+    if test_img_path and test_img_path.exists():
         print(f"Loading real test image from: {test_img_path}")
         img_data = test_img_path.read_bytes()
         test_image = UploadedImage(data=img_data, content_type="image/png")
         
         try:
             result = denoise_single(test_image, model, cfg)
-            save_path = "test_denoised_output.png"
-            cv2.imwrite(save_path, result)
+            output_dir = BE_ROOT / "test_outputs" / "denoiser"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            save_path = output_dir / "test_denoised_output.png"
+            cv2.imwrite(str(save_path), result)
             print(f"[OK] Real image denoised and saved to: {save_path} | shape={result.shape}")
         except Exception as e:
             print(f"[ERROR] Real image denoise failed: {e}")
     else:
-        print("Real test image not found, running dummy test...")
+        print("No real test image provided, running dummy test...")
         dummy_array = np.random.randint(0, 255, (170, 335, 3), dtype=np.uint8)
         success, encoded = cv2.imencode(".png", dummy_array)
         dummy_image = UploadedImage(data=encoded.tobytes(), content_type="image/png")

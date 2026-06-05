@@ -13,12 +13,19 @@ const validateResponseShape = (response) => {
   const hasOcrPredictions =
     response?.yolo_ocr_preds === undefined ||
     (Array.isArray(response.yolo_ocr_preds) && response.yolo_ocr_preds.length >= 1);
+  const hasWarnings = Array.isArray(response?.warnings);
+  const hasStageFallbacks =
+    response?.stage_fallbacks !== null &&
+    typeof response?.stage_fallbacks === 'object' &&
+    !Array.isArray(response?.stage_fallbacks);
 
   if (
     !isValid ||
     !hasSrImages ||
     !hasBboxMetadata ||
     !hasOcrPredictions ||
+    !hasWarnings ||
+    !hasStageFallbacks ||
     typeof response?.ocr_text !== 'string' ||
     typeof response?.input_omitted_count !== 'number'
   ) {

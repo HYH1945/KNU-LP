@@ -123,6 +123,11 @@ export default function App() {
 
   const canAnalyze = inputMode === 'image' ? files.length > 0 : videoFile !== null;
   const isLoading = status === 'loading';
+  const activeFallbacks = result?.stage_fallbacks
+    ? Object.entries(result.stage_fallbacks)
+      .filter(([, isActive]) => isActive)
+      .map(([stage]) => stage)
+    : [];
 
   return (
     <div className={styles.page}>
@@ -233,6 +238,7 @@ export default function App() {
                 <span>Route: {result.pipeline_route}</span>
                 <span>SR: {result.sr_applied ? 'Applied' : 'Skipped'}</span>
                 <span>High-res crops: {result.high_resolution_count}</span>
+                <span>Fallback: {activeFallbacks.length > 0 ? activeFallbacks.join(', ') : 'None'}</span>
                 <span>
                   HR: {result.hr_width} x {result.hr_height}
                 </span>
