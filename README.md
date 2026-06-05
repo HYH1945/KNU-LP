@@ -1,6 +1,6 @@
 # KNU-LP
 
-CCTV 같은 저화질 환경에서도 동작하는 번호판 인식 파이프라인입니다.
+저화질 CCTV 환경에서도 강건하게 동작하는 번호판 인식 파이프라인 데모입니다.
 
 전체 흐름은 다음과 같습니다.
 
@@ -8,84 +8,41 @@ CCTV 같은 저화질 환경에서도 동작하는 번호판 인식 파이프라
 이미지/영상 입력
 -> 영상이면 프레임 추출
 -> YOLO 번호판 검출 및 crop
--> original plate bbox 면적 기준 상위 5개 후보 선택
+-> 원본 번호판 bbox 면적 기준 상위 5개 후보 선택
 -> DnCNN denoising
 -> SR 또는 OCR ensemble 분기
 -> OCR 결과 표시
 ```
 
-## 실행 기준
+## 빠른 실행 순서
 
-- 실제 실행 기준 디렉터리는 루트의 `BE/`, `FE/`입니다.
-- 전달용 코드 묶음이었던 `knulp/` 폴더는 실행에 사용하지 않습니다.
-- 대용량 weight 파일은 Git에 포함하지 않습니다.
+1. **BE 가중치 파일 다운로드 및 수동 배치**
+   * 대용량 가중치 파일들은 `.gitignore` 처리되어 레포지토리에 포함되어 있지 않습니다.
+   * 정확한 파일명과 배치 구조는 [BE/WEIGHTS.md](BE/WEIGHTS.md)를 기준으로 확인해 주세요.
+   * `BE/vendors/`는 외부 모델 구현 코드 위치이며, weight 파일 위치가 아닙니다.
+2. **BE 서버 실행**
+   * `BE` 디렉터리로 이동 후 패키지 의존성 설치: `pip install -r requirements.txt`
+   * 서버 실행: `uvicorn main:app --host 0.0.0.0 --port 8000 --reload` (또는 `run_backend.bat` 실행)
+   * 자세한 설명: [BE/readme.md](BE/readme.md)
+3. **FE 개발 서버 실행**
+   * `FE` 디렉터리로 이동 후 패키지 의존성 설치: `npm install`
+   * 서버 실행: `npm run dev`
+   * 자세한 설명: [FE/readme.md](FE/readme.md)
 
-## 백엔드 구조
+## 구현 상태
 
-```text
-BE/
-  api/                 FastAPI route
-  configs/             settings.yaml
-  pipeline/            우리 프로젝트 파이프라인/adapter 코드
-  vendors/             외부 연구 코드 및 모델 구현체
-    rgdiffsr/
-    gplpr/
-    taming/
-```
-
-`pipeline/`에는 파이프라인 연결 코드만 두고, RGDiffSR/PARSeq/GP-LPR/taming 같은 외부 코드는 `vendors/` 아래로 분리했습니다.
-
-## Weight 배치
-
-현재 설정이 참조하는 weight 경로는 아래와 같습니다.
-
-```text
-BE/pipeline/plate_cropper/weights/best.pt
-BE/pipeline/denoiser/weights/best_model.pt
-BE/pipeline/superresolution/weights/SR.ckpt
-BE/pipeline/superresolution/weights/VQGAN.ckpt
-BE/pipeline/superresolution/weights/parseq.pt
-BE/pipeline/ocr/weights/best_model.pth
-```
-
-별도로 전달받은 `BE/yolov8n-seg.pt`는 현재 기본 설정에서는 직접 사용하지 않습니다. YOLO 번호판 검출은 `BE/pipeline/plate_cropper/weights/best.pt`를 사용합니다.
-
-## BE 실행
-
-```bash
-cd BE
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Windows에서는 `BE/run_backend.bat`를 사용할 수도 있습니다.
-
-## FE 실행
-
-```bash
-cd FE
-npm install
-npm run dev
-```
-
-FE의 `/api` 요청은 Vite proxy를 통해 `http://localhost:8000`으로 전달됩니다.
-
-## 현재 구현 상태
-
-| 항목 | 상태 |
-|---|---|
-| 이미지/영상 업로드 | 구현됨 |
-| 영상 프레임 추출 | 구현됨 |
-| YOLO 번호판 crop/highlight | 실제 모델 연결됨 |
-| 후보 5개 선정 | YOLO 이후 original plate bbox 면적 기준 |
-| DnCNN denoising | 컬러 DnCNN weight로 동작 확인 |
-| SR | RGDiffSR adapter 연결 및 로드 확인 |
-| OCR | GP-LPR adapter 연결 및 로드 확인 |
-| OCR ensemble | 후보별 OCR 결과 character voting |
+| 항목 | 상태 | 설명 |
+|---|---|---|
+| 이미지/영상 업로드 및 프레임 추출 | 구현 완료 | 영상 구간 추출 프레임 YOLO 파이프라인 연동 |
+| YOLO 번호판 검출 및 크롭 | 구현 완료 | 실제 YOLOv8-seg 기반 크롭 모델 탑재 (`best.pt`) |
+| 후보군 5장 자동 선정 | 구현 완료 | YOLO 바운딩 박스 면적 기준 정렬 필터링 |
+| 3채널 컬러 DnCNN Denoising | 구현 완료 | 3채널 컬러 이미지용 노이즈 보정 모델 탑재 (`best_model.pt`) |
+| Super-Resolution (SR) | 구현 완료 | RGDiffSR 모델 adapter 및 가중치 로드 확인 (`SR.ckpt`, `VQGAN.ckpt`) |
+| OCR (Text Recognition) | 구현 완료 | GP-LPR 기반 번호판 텍스트 해독 모델 연동 (`best_model.pth`) |
+| OCR Ensemble Voting | 구현 완료 | 다중 프레임 인식 결과의 캐릭터 단위 Majority Voting 처리 |
 
 ## 참고 문서
 
-- [BE/readme.md](BE/readme.md)
-- [BE/WEIGHTS.md](BE/WEIGHTS.md)
-- [FE/readme.md](FE/readme.md)
-- [rule.md](rule.md)
+- 백엔드 실행 및 가중치 위치: [BE/readme.md](BE/readme.md), [BE/WEIGHTS.md](BE/WEIGHTS.md)
+- 프론트엔드 실행 및 UI 동작: [FE/readme.md](FE/readme.md)
+- 팀 공동 작업 규칙: [rule.md](rule.md)
