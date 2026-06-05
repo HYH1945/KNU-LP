@@ -16,7 +16,7 @@ from pipeline.utils import decode_image
 
 MODULE_ROOT = Path(__file__).resolve().parent
 BE_ROOT = MODULE_ROOT.parent.parent
-VENDOR_ROOT = MODULE_ROOT / "gplpr_vendor"
+VENDOR_ROOT = BE_ROOT / "vendors" / "gplpr"
 
 
 class GPLPRLabelConverter:

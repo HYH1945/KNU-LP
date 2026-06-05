@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import router as api_router
 
-app = FastAPI(title="License Plate Recognition Backend Skeleton")
+app = FastAPI(title="KNU-LP Backend")
 
 app.add_middleware(
     CORSMiddleware,

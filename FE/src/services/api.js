@@ -10,11 +10,15 @@ const validateResponseShape = (response) => {
   const hasBboxMetadata =
     Array.isArray(response?.selected_plate_bboxes) &&
     response.selected_plate_bboxes.length === 5;
+  const hasOcrPredictions =
+    response?.yolo_ocr_preds === undefined ||
+    (Array.isArray(response.yolo_ocr_preds) && response.yolo_ocr_preds.length >= 1);
 
   if (
     !isValid ||
     !hasSrImages ||
     !hasBboxMetadata ||
+    !hasOcrPredictions ||
     typeof response?.ocr_text !== 'string' ||
     typeof response?.input_omitted_count !== 'number'
   ) {

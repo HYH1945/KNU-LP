@@ -4,87 +4,69 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+venv/
+.venv/
 
 # Frontend
 **/node_modules/
 FE/dist/
 FE/.npm-cache/
 
+# Local environment files
+.env
+.env.*
+.env.local
+.env.*.local
+BE/.env
+BE/.env.*
+
 # Local model weights
 *.pt
 *.pth
+*.ckpt
 *.onnx
+*.engine
+**/weights/
 
-# Local media/test artifacts
+# Local media and generated outputs
 *.mp4
 *.avi
 *.mov
 *.mkv
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+BE/test_outputs/
+**/data/
+**/dataset/
+**/dataset_color/
+!BE/vendors/rgdiffsr/parseq/strhub/data/
+!BE/vendors/rgdiffsr/parseq/strhub/data/**
+**/test_results/
+**/test_outputs/
 AI/Task_1/denoiser/pipeline/input.png
 AI/Task_1/denoiser/pipeline/output.png
+AI/Task_1/train/
 
-# ──────────────────────────────────────────
-# BE — FastAPI / Python
-# ──────────────────────────────────────────
-BE/__pycache__/
-BE/**/__pycache__/
-BE/*.py[cod]
-BE/**/*.py[cod]
-BE/.env
-BE/.env.*
-BE/*.db
-BE/*.sqlite3
+# Accidentally dropped transfer bundle
+knulp/
 
-# ──────────────────────────────────────────
 # Pipeline auto-generated documents
-# ──────────────────────────────────────────
 planning.md
 wiki.md
 wiki.html
 qa_report.md
 wiki/
 
-# ──────────────────────────────────────────
-# Common — OS / IDE / misc
-# ──────────────────────────────────────────
+# OS / IDE / misc
 .DS_Store
 .DS_Store?
 Thumbs.db
 ehthumbs.db
-
 .idea/
 .vscode/
-
 *.log
 *.tmp
 *.swp
 *.swo
-
-# Environment files (repo root level)
-.env
-.env.*
-.env.local
-.env.*.local
-
-venv/
-.venv/
-
-# ──────────────────────────────────────────
-# Extra Denoise & SR weights / dataset exclusions
-# ──────────────────────────────────────────
-*.ckpt
-**/data/
-**/dataset/
-**/dataset_color/
-**/test_results/
-**/test_outputs/
-*데이터셋*
-*.zip
-*.tar.gz
-*.tgz
-*.rar
-*.mp4
-*.avi
-*.mov
-*.mkv
-AI/Task_1/train/

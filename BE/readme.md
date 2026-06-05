@@ -1,54 +1,37 @@
 # BE
 
-KNU 번호판 인식 데모의 FastAPI 백엔드입니다.
+KNU-LP FastAPI 백엔드입니다. 실행 기준 위치는 루트의 `BE/` 디렉터리입니다.
 
-## 실행 환경
+## 실행
 
-- Python 3.10 권장
-- CUDA가 없으면 YOLO와 DnCNN은 코드에서 CPU로 자동 전환됩니다.
+```bash
+cd BE
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
 
+Windows에서는 `run_backend.bat`를 사용할 수 있습니다.
 
-## 의존성 설치
-
-주요 의존성은 `fastapi`, `uvicorn`, `python-multipart`, `opencv-python`, `torch`, `ultralytics`입니다.
-
-requirements.txt 참조
-
-## 가중치 파일 위치
-
-대용량 모델 가중치 파일은 Git 관리 대상에서 배제되어 있습니다. 아래의 구조대로 수동으로 정확히 파일을 배치해 주세요.
+## 폴더 구조
 
 ```text
 BE/
-├── yolov8n-seg.pt (YOLOv8 기본 가중치)
-└── pipeline/
-    ├── plate_cropper/
-    │   └── weights/
-    │       └── best.pt (번호판 검출)
-    ├── denoiser/
-    │   └── weights/
-    │       └── best_model.pt (3채널 컬러 디노이저)
-    ├── ocr/
-    │   └── weights/
-    │       └── best_model.pth (CRNN/ParSeq OCR 모델)
-    └── superresolution/
-        ├── weights/
-        │   ├── SR.ckpt (DiffSR 메인 가중치)
-        │   ├── VQGAN.ckpt (VQGAN 디코더 가중치)
-        │   └── parseq.pt (ParSeq 텍스트 인코더 가중치)
-        └── rgdiffsr_vendor/
-            ├── parseq/
-            │   └── weights/
-            │       └── parseq.pt (벤더 연동용 중복 가중치)
-            └── taming/
-                └── modules/
-                    └── autoencoder/
-                        └── lpips/
-                            └── vgg.pth (LPIPS 평가용 vgg 가중치)
+  api/                 FastAPI route
+  configs/             settings.yaml
+  pipeline/            파이프라인 orchestration 및 adapter
+  vendors/             외부 연구 코드
+    rgdiffsr/          RGDiffSR, LDM, PARSeq, text_super_resolution
+    gplpr/             GP-LPR OCR 모델 코드
+    taming/            taming-transformers 호환 코드
 ```
 
-설정 파일은 `BE/configs/settings.yaml`입니다. (in_channels=3 등으로 세팅)
+`pipeline/`은 우리 서비스 코드 중심으로 유지하고, 외부 구현체는 `vendors/` 아래로 분리했습니다. SR adapter는 `settings.yaml`의 `superresolution.paths.repo`를 통해 `BE/vendors/rgdiffsr`를 참조합니다.
 
+## Weight
+
+weight 파일은 Git에 포함하지 않습니다. 필요한 위치는 [WEIGHTS.md](WEIGHTS.md)를 참고하세요.
+
+현재 YOLO 설정은 `BE/pipeline/plate_cropper/weights/best.pt`를 사용합니다. `BE/yolov8n-seg.pt`는 기본 설정에서 직접 참조하지 않습니다.
 
 ## API
 
@@ -58,81 +41,50 @@ BE/
 
 | 필드 | 설명 |
 |---|---|
-| `files` | 이미지 모드에서는 이미지 1장 이상, 영상 모드에서는 영상 1개 |
+| `files` | 이미지 모드: 이미지 여러 장, 영상 모드: 영상 1개 |
 | `input_mode` | `image` 또는 `video` |
-| `hr_width` | 사용자가 입력한 기준 HR 너비 |
-| `hr_height` | 사용자가 입력한 기준 HR 높이 |
+| `hr_width` | 기준 HR 너비 |
+| `hr_height` | 기준 HR 높이 |
 | `video_start` | 영상 분석 시작 초 |
 | `video_end` | 영상 분석 종료 초 |
 | `sr_mode` | `auto`, `always`, `skip` |
-| `denoise_enabled` | 디노이징 사용 여부 |
+| `denoise_enabled` | denoiser 사용 여부 |
 
-## 파이프라인 흐름
+## 파이프라인
 
 ```text
 uploaded images/video
--> processor
+-> video frame extraction
 -> YOLO plate crop/highlight
--> original plate bbox 기준 상위 5개 후보 선택
--> denoiser
+-> original plate bbox 면적 기준 상위 5개 후보 선택
+-> DnCNN denoiser
 -> SR 또는 OCR ensemble 분기
 -> OCR result
 ```
 
-영상 모드에서는 선택 구간에서 프레임을 추출한 뒤 이미지 모드와 동일하게 처리합니다.
+## 분기 기준
 
-## 입력 preview와 후보 선택
+- 자동 SR 기준 면적은 `hr_width * hr_height * 0.8`입니다.
+- 선택된 후보 중 가장 작은 original plate bbox 면적이 기준 이하이면 SR 경로로 보냅니다.
+- `sr_mode=always` 또는 `sr_mode=skip`으로 자동 분기를 강제할 수 있습니다.
 
-- `input_preview`에는 전체 입력 프레임 중 앞 5장을 담습니다.
-- 입력 프레임이 5장을 넘으면 `input_omitted_count`로 생략된 개수를 전달합니다.
-- YOLO는 전체 입력 프레임에 대해 실행합니다.
-- 최종 처리 대상 5장은 YOLO 이후에 선택합니다.
-- 선택 기준은 최종 crop 이미지 크기가 아니라 원본 프레임에서 탐지된 번호판 bbox 면적입니다.
-- 정렬 우선순위는 `detected 여부 -> original plate bbox area -> confidence -> source index`입니다.
-- `selected_inputs`는 최종 선택된 5개 crop에 대응되는 원본 프레임입니다.
-- `selected_plate_bboxes`는 각 후보의 원본 bbox 너비, 높이, 면적, confidence, source index를 전달합니다.
-- 번호판 crop 이미지는 perspective 보정 후 설정된 크기로 정규화되므로, 화면에 보이는 crop 해상도는 후보 정렬 기준으로 사용하지 않습니다.
+## 주요 응답 필드
 
-## 자동 SR 분기 기준
+| 필드 | 설명 |
+|---|---|
+| `input_preview` | 전체 입력 중 앞 5개 preview |
+| `input_omitted_count` | 5개 이후 생략된 입력 수 |
+| `selected_inputs` | 최종 선택 후보의 원본 프레임 |
+| `selected_plate_bboxes` | original plate bbox 너비, 높이, 면적, confidence |
+| `yolo_crops` | YOLO crop 및 perspective 보정 결과 |
+| `yolo_selected` | 원본 프레임의 YOLO highlight 결과 |
+| `denoised` | denoising 결과 |
+| `sr` | SR 결과 또는 SR 생략 시 입력 이미지 |
+| `ocr_text` | 최종 OCR 결과 |
+| `yolo_ocr_preds` | 후보별 OCR 결과 |
 
-- 기준 면적은 `hr_width * hr_height * 0.8`입니다.
-- 탐지된 원본 번호판 bbox 면적이 기준 면적을 넘으면 고해상도 후보로 계산합니다.
-- 고해상도 후보가 3장 이상이면 SR을 생략하고 OCR ensemble 경로로 갑니다.
-- 그 외에는 SR 경로를 거친 뒤 OCR로 갑니다.
-- `sr_mode=always` 또는 `sr_mode=skip`으로 자동 분기를 강제로 바꿀 수 있습니다.
-- YOLO 탐지가 실패한 후보는 HR 후보로 계산하지 않습니다.
+## 주의사항
 
-## 모듈 구조
-
-```text
-BE/pipeline/
-├── orchestrator.py
-├── processor/
-│   ├── image_processor.py
-│   └── video_processor.py
-├── plate_cropper/
-├── denoiser/
-├── superresolution/
-│   └── sr_model.py
-└── ocr/
-    ├── ocr_model.py
-    └── ensemble.py
-```
-
-## 구현 상태
-
-| 항목 | 상태 | 설명 |
-|---|---|---|
-| 이미지 업로드 처리 | 구현됨 | Multi-file 업로드 가능 |
-| 영상 업로드 처리 | 구현됨 | 영상 구간 프레임 자동 추출 기능 |
-| YOLO 번호판 crop | 구현 완료 | 실제 YOLOv8-seg 연동 완료 (`best.pt`) |
-| 5장 선정 | 구현 완료 | 번호판 bbox 면적 기준 내림차순 정렬 및 상위 5장 자동 픽 |
-| DnCNN denoiser | 구현 완료 | 3채널 컬러 복합 열화 디노이저 연동 완료 (`best_model.pt`) |
-| SR (Super Resolution) | 구현 완료 | DiffSR 초해상화 모델 연동 완료 (`SR.ckpt`, `VQGAN.ckpt`) |
-| OCR | 구현 완료 | ParSeq 및 CRNN 기반 번호판 텍스트 해독 모델 연동 완료 (`best_model.pth`) |
-| OCR ensemble voting | 구현 완료 | 여러 프레임 간의 글자 단위 다수결 보정 로직 연동 완료 |
-
-## 현재 구현상 주의사항
-
-- 각 모델 모듈(YOLO, DnCNN, SR, OCR)은 가중치 파일이 누락되었거나 로드 시 예외가 발생할 경우, 전체 파이프라인의 중단을 막기 위해 입력을 그대로 보존하는 fallback(Identity) 구조가 적용되어 있습니다. 따라서 정상 결과를 시연하려면 **가중치 파일 수동 배치가 필수적**입니다.
-- 백엔드에 필요한 특수 라이브러리들(`omegaconf`, `einops` 등)이 conda 환경에 설치되어 있어야 정상 구동됩니다.
+- 모델 weight가 없거나 로드 실패가 발생하면 파이프라인 중단을 막기 위해 fallback이 적용됩니다.
+- SR/OCR까지 실제로 검증하려면 `requirements.txt` 설치와 weight 배치가 모두 필요합니다.
+- `BE/vendors/rgdiffsr/parseq/strhub/data`는 데이터셋이 아니라 PARSeq 실행에 필요한 소스 코드입니다.

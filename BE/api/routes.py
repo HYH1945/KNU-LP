@@ -26,8 +26,8 @@ def _is_video_file(file: UploadFile) -> bool:
 async def analyze_media(
     files: list[UploadFile] | None = File(default=None),
     input_mode: str = Form(default="image"),
-    hr_width: int = Form(default=335),
-    hr_height: int = Form(default=170),
+    hr_width: int = Form(default=96),
+    hr_height: int = Form(default=32),
     video_start: float = Form(default=0.0),
     video_end: float | None = Form(default=None),
     sr_mode: str = Form(default="auto"),

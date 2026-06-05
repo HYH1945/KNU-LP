@@ -242,7 +242,7 @@ export default function App() {
                 previews={previews}
                 onDetailOpen={(info) => setModalInfo(info)}
               />
-              <OcrResult text={result.ocr_text} />
+              <OcrResult text={result.ocr_text} predictions={result.yolo_ocr_preds} />
             </>
           ) : null}
         </main>

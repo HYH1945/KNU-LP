@@ -38,6 +38,7 @@ class AnalyzeResponse(BaseModel):
     denoised: ImageList
     sr: SrImageList
     ocr_text: NonEmptyText
+    yolo_ocr_preds: List[str]
     pipeline_route: str
     sr_applied: bool
     high_resolution_count: int

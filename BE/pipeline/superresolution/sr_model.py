@@ -22,6 +22,7 @@ from pipeline.utils import opencv_to_uploaded
 
 MODULE_ROOT = Path(__file__).resolve().parent
 BE_ROOT = MODULE_ROOT.parent.parent
+VENDORS_ROOT = BE_ROOT / "vendors"
 
 
 def run_sr(
@@ -112,21 +113,15 @@ def _get_model():
         raise FileNotFoundError(f"PARSeq repo not found: {parseq_repo}")
 
     # sys.modules에서 taming 관련 모듈을 캐시 아웃하여, 올바른 경로에서 다시 로드되도록 합니다.
-    for k in list(sys.modules.keys()):
-        if k == "taming" or k.startswith("taming."):
-            sys.modules.pop(k, None)
+    for key in list(sys.modules.keys()):
+        if key in {"ldm", "strhub", "taming", "text_super_resolution"} or key.startswith(
+            ("ldm.", "strhub.", "taming.", "text_super_resolution.")
+        ):
+            sys.modules.pop(key, None)
 
-    if str(BE_ROOT) not in sys.path:
-        sys.path.insert(0, str(BE_ROOT))
-    else:
-        sys.path.remove(str(BE_ROOT))
-        sys.path.insert(0, str(BE_ROOT))
-
-    if str(repo_root) not in sys.path:
-        sys.path.insert(1, str(repo_root))
-    else:
-        sys.path.remove(str(repo_root))
-        sys.path.insert(1, str(repo_root))
+    _set_sys_path(BE_ROOT, 0)
+    _set_sys_path(VENDORS_ROOT, 1)
+    _set_sys_path(repo_root, 2)
 
     with _temporary_cwd(repo_root):
         from ldm.util import instantiate_from_config
@@ -233,6 +228,13 @@ def _resolve_repo_path(repo_root: Path, path: str) -> Path:
 def _require_file(path: Path, label: str) -> None:
     if not path.is_file():
         raise FileNotFoundError(f"{label} not found: {path}")
+
+
+def _set_sys_path(path: Path, index: int) -> None:
+    path_text = str(path)
+    if path_text in sys.path:
+        sys.path.remove(path_text)
+    sys.path.insert(index, path_text)
 
 
 def _set_seed(seed: int) -> None:
