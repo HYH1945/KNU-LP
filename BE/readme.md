@@ -16,23 +16,38 @@ requirements.txt 참조
 
 ## 가중치 파일 위치
 
-가중치 파일은 Git에 올리지 않습니다. 해당하는 경로에 best.pt, best_model.pt 를 넣으세요.
+대용량 모델 가중치 파일은 Git 관리 대상에서 배제되어 있습니다. 아래의 구조대로 수동으로 정확히 파일을 배치해 주세요.
 
 ```text
 BE/
+├── yolov8n-seg.pt (YOLOv8 기본 가중치)
 └── pipeline/
     ├── plate_cropper/
     │   └── weights/
-    │       └── best.pt
-    └── denoiser/
-        └── weights/
-            └── best_model.pt
+    │       └── best.pt (번호판 검출)
+    ├── denoiser/
+    │   └── weights/
+    │       └── best_model.pt (3채널 컬러 디노이저)
+    ├── ocr/
+    │   └── weights/
+    │       └── best_model.pth (CRNN/ParSeq OCR 모델)
+    └── superresolution/
+        ├── weights/
+        │   ├── SR.ckpt (DiffSR 메인 가중치)
+        │   ├── VQGAN.ckpt (VQGAN 디코더 가중치)
+        │   └── parseq.pt (ParSeq 텍스트 인코더 가중치)
+        └── rgdiffsr_vendor/
+            ├── parseq/
+            │   └── weights/
+            │       └── parseq.pt (벤더 연동용 중복 가중치)
+            └── taming/
+                └── modules/
+                    └── autoencoder/
+                        └── lpips/
+                            └── vgg.pth (LPIPS 평가용 vgg 가중치)
 ```
 
-- YOLO 번호판 검출 가중치: `BE/pipeline/plate_cropper/weights/best.pt`
-- DnCNN 디노이징 가중치: `BE/pipeline/denoiser/weights/best_model.pt`
-
-설정 파일은 `BE/configs/settings.yaml`입니다.
+설정 파일은 `BE/configs/settings.yaml`입니다. (in_channels=3 등으로 세팅)
 
 
 ## API
@@ -106,23 +121,18 @@ BE/pipeline/
 
 ## 구현 상태
 
-| 항목 | 상태 |
-|---|---|
-| 이미지 업로드 처리 | 구현됨 |
-| 영상 업로드 처리 | 구현됨 |
-| 영상 프레임 추출 | 구현됨 |
-| YOLO 번호판 crop/highlight | 실제 모델 연결됨 |
-| 5장 선정 | YOLO 이후 original plate bbox 면적 기준으로 구현됨 |
-| INPUT preview | 앞 5장 표시 및 `+N` 생략 표시 구현됨 |
-| HR Width/Height 기반 자동 분기 | original bbox area 기준으로 구현됨 |
-| DnCNN denoiser | 실제 가중치로 동작 확인됨 |
-| SR | 현재 bicubic resize stub |
-| OCR | 현재 stub |
-| OCR ensemble | 구조 구현됨. 실제 OCR 연결 후 의미 있는 voting 가능 |
+| 항목 | 상태 | 설명 |
+|---|---|---|
+| 이미지 업로드 처리 | 구현됨 | Multi-file 업로드 가능 |
+| 영상 업로드 처리 | 구현됨 | 영상 구간 프레임 자동 추출 기능 |
+| YOLO 번호판 crop | 구현 완료 | 실제 YOLOv8-seg 연동 완료 (`best.pt`) |
+| 5장 선정 | 구현 완료 | 번호판 bbox 면적 기준 내림차순 정렬 및 상위 5장 자동 픽 |
+| DnCNN denoiser | 구현 완료 | 3채널 컬러 복합 열화 디노이저 연동 완료 (`best_model.pt`) |
+| SR (Super Resolution) | 구현 완료 | DiffSR 초해상화 모델 연동 완료 (`SR.ckpt`, `VQGAN.ckpt`) |
+| OCR | 구현 완료 | ParSeq 및 CRNN 기반 번호판 텍스트 해독 모델 연동 완료 (`best_model.pth`) |
+| OCR ensemble voting | 구현 완료 | 여러 프레임 간의 글자 단위 다수결 보정 로직 연동 완료 |
 
 ## 현재 구현상 주의사항
 
-- YOLO와 DnCNN denoiser는 가중치가 없거나 로드에 실패하면 입력 이미지를 그대로 통과시키는 fallback을 사용합니다.
-- SR은 현재 bicubic resize stub입니다. 실제 SR 모델은 `pipeline/superresolution/sr_model.py`의 `run_sr()`에 연결하면 됩니다.
-- OCR은 현재 고정 문자열 stub입니다. 실제 OCR 모델은 `pipeline/ocr/ocr_model.py`에 연결하면 됩니다.
-- OCR ensemble은 문자 단위 majority voting 구조를 먼저 고정해두었습니다.
+- 각 모델 모듈(YOLO, DnCNN, SR, OCR)은 가중치 파일이 누락되었거나 로드 시 예외가 발생할 경우, 전체 파이프라인의 중단을 막기 위해 입력을 그대로 보존하는 fallback(Identity) 구조가 적용되어 있습니다. 따라서 정상 결과를 시연하려면 **가중치 파일 수동 배치가 필수적**입니다.
+- 백엔드에 필요한 특수 라이브러리들(`omegaconf`, `einops` 등)이 conda 환경에 설치되어 있어야 정상 구동됩니다.
