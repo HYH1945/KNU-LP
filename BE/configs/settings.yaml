@@ -1,0 +1,55 @@
+yolo:
+  paths:
+    weights: "./pipeline/plate_cropper/weights/best.pt"
+    dummy: "./pipeline/plate_cropper/dummy/dummy.jpg"
+
+  model:
+    device: "cuda"
+    conf_thr: 0.25
+    iou_thr: 0.45
+    imgsz: 640
+
+  plate:
+    output_width: 96
+    output_height: 32
+
+denoiser:
+  paths:
+    weights: "./pipeline/denoiser/weights/best_model.pt"
+
+  model:
+    device: "cuda"
+    in_channels: 3
+    depth: 17
+    features: 64
+    image_size: [48, 128]
+
+superresolution:
+  paths:
+    repo: "./pipeline/superresolution/rgdiffsr_vendor"
+    config: "configs/latent-diffusion/sr_test_real_run.yaml"
+    checkpoint: "./pipeline/superresolution/weights/SR.ckpt"
+    vqgan: "./pipeline/superresolution/weights/VQGAN.ckpt"
+    parseq: "./pipeline/superresolution/weights/parseq.pt"
+    parseq_repo: "parseq"
+
+  model:
+    device: "cuda"
+    frames: 5
+    input_width: 64
+    input_height: 16
+    output_width: 96
+    output_height: 32
+    ddim_steps: 200
+    ddim_eta: 1.0
+    seed: 23
+
+ocr:
+  paths:
+    checkpoint: "./pipeline/ocr/weights/best_model.pth"
+
+  model:
+    device: "cuda"
+    alphabet: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    img_width: 96
+    img_height: 32

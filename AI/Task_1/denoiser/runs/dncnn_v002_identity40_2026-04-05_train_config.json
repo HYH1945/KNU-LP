@@ -1,0 +1,28 @@
+﻿{
+  "model": "DnCNN",
+  "version": "v002",
+  "date": "2026-04-05",
+  "training": {
+    "train_root": "../data/dataset/train",
+    "val_root": "../data/dataset/val",
+    "image_size": [48, 128],
+    "batch_size": 32,
+    "epochs": 30,
+    "lr": 0.0001,
+    "seed": 42,
+    "identity_ratio": 0.4,
+    "denoise_loss_weight": 1.0,
+    "identity_loss_weight": 1.0,
+    "optimizer": "Adam",
+    "save_path": "best_model.pt"
+  },
+  "artifacts": {
+    "best_model": "../dncnn/best_model.pt",
+    "eval_json": "../results/dncnn_eval_latest.json",
+    "eval_csv": "../results/dncnn_eval_summary.csv"
+  },
+  "code": {
+    "repo_commit": "da4ca68f11a630f63c499c05e61a5e0c699f5da4",
+    "train_file": "../dncnn/train.py"
+  }
+}
