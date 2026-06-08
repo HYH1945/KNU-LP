@@ -17,6 +17,7 @@
 - Classical (OpenCV 기반)
 - DnCNN (CNN 기반 딥러닝 모델)
 - Transformer 기반 디노이저
+- **NAFNet (Color Denoising 특화)**
 
 ---
 
@@ -31,8 +32,9 @@
 | Model        | PSNR | SSIM |
 |-------------|------|------|
 | Classical   |      |      |
-| DnCNN       |      |      |
+| DnCNN       | 23.26| 0.53 |
 | Transformer |      |      |
+| **NAFNet**  | **25.49**| **0.66** |
 
 각 모델의 디노이징 결과 샘플 사진 첨부 필요
 
