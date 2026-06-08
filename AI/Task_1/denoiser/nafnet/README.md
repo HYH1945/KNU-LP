@@ -30,3 +30,13 @@ python train_nafnet.py --epochs 10 --use_ssim_loss --identity_ratio 0.4
 python extract_metrics_process.py
 ```
 - 평가 결과, 기존 모델 대비 **PSNR이 +2.23dB 상승**하였고, **SSIM이 0.53에서 0.66으로 대폭 상승**하였습니다.
+
+## 파일 구성 및 쓰임새 (File Structure)
+본 폴더 내에 포함된 각 스크립트의 역할은 다음과 같습니다.
+
+- **`model.py`**: NAFNet의 핵심 신경망 아키텍처(SimpleGate, SCA 블록 포함)를 정의하는 모델 클래스 파일입니다.
+- **`train.py`**: 데이터로더 설정, 손실 함수(Charbonnier, SSIM), 그리고 학습 루프를 제어하는 메인 훈련 스크립트입니다. `--identity_ratio` 등의 실험적 하이퍼파라미터를 여기서 조작할 수 있습니다.
+- **`evaluate.py`**: 훈련이 끝난 가중치 모델을 불러와, 테스트 데이터셋을 대상으로 전체 PSNR 및 SSIM 점수를 일괄 측정하고 잔차(Residual) 분석을 돕는 평가 스크립트입니다.
+- **`generate_samples.py`**: 노이즈 이미지(Input)가 모델을 통과하며 제거된 노이즈(Residual)와 최종 결과물(Output)로 변환되는 과정을 시각화하여 모자이크 이미지로 저장합니다.
+- **`generate_dncnn_samples.py`**: 구형 모델(DnCNN)의 디노이징 결과를 시각화하여, NAFNet과의 성능(특히 컬러 보존 능력) 비교 증빙 자료를 생성하는 데 쓰입니다.
+- **`generate_zoom.py`**: 번호판 글씨의 아주 미세한 윤곽선이 뭉개지지 않고 보존되었음을 증명하기 위해, 픽셀 단위로 확대한(Zoom-in) 시각화 자료를 뽑아내는 스크립트입니다.
