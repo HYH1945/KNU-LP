@@ -38,7 +38,7 @@ superresolution:
     frames: 5
     input_width: 64
     input_height: 16
-    output_width: 96
+    output_width: 128
     output_height: 32
     ddim_steps: 200
     ddim_eta: 1.0

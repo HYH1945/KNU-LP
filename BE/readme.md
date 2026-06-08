@@ -128,6 +128,8 @@ BE/
 | `pipeline_route` | `sr_then_ocr` 또는 `ocr_ensemble` |
 | `sr_applied` | SR 적용 여부 |
 | `high_resolution_count` | HR 기준 면적을 넘는 후보 수 |
+| `warnings` | 단계별 fallback 또는 decode 실패 경고 목록 |
+| `stage_fallbacks` | yolo, denoise, sr, ocr 단계별 fallback 발생 여부 |
 
 ## 구현 상태
 

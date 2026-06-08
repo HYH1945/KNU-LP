@@ -55,6 +55,7 @@ npm run preview
 - Detail 모달은 이미지의 실제 표시 데이터 크기와 원본 프레임 기준 번호판 bbox 정보를 함께 보여줍니다.
 - 번호판 crop 이미지는 백엔드에서 perspective 보정 후 고정 크기로 정규화되므로, crop 이미지 해상도는 후보 정렬 기준이 아닙니다.
 - 후보 정렬과 자동 SR 분기는 백엔드가 전달하는 원본 번호판 bbox 면적 기준으로 이루어집니다.
+- 분석 summary 영역은 fallback이 발생한 처리 단계를 함께 표시합니다.
 
 ## 응답에서 사용하는 주요 필드
 
@@ -73,6 +74,8 @@ npm run preview
 | `yolo_ocr_preds` | 후보별 OCR 결과 문자열 |
 | `pipeline_route` | `sr_then_ocr` 또는 `ocr_ensemble` |
 | `sr_applied` | SR 적용 여부 |
+| `warnings` | 단계별 fallback 또는 decode 실패 경고 목록 |
+| `stage_fallbacks` | yolo, denoise, sr, ocr 단계별 fallback 발생 여부 |
 
 ## 구현 상태
 

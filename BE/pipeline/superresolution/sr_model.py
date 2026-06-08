@@ -94,8 +94,7 @@ def _run_rgdiffsr(
     image = image.clamp(0.0, 1.0)
     rgb = (image.numpy().transpose(1, 2, 0) * 255.0).round().astype(np.uint8)
     bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-    output_width = int(model_cfg.get("sr_internal_width", 128))
-    output_height = int(model_cfg.get("sr_internal_height", 32))
+    output_width, output_height = _get_output_size(model_cfg)
     resized = cv2.resize(bgr, (output_width, output_height), interpolation=cv2.INTER_CUBIC)
     return opencv_to_uploaded(resized)
 
@@ -174,8 +173,7 @@ def _placeholder_to_hr_tensor(image: UploadedImage, cfg: dict, options: Pipeline
     import torch
 
     model_cfg = cfg["model"]
-    width = int(model_cfg.get("sr_internal_width", 128))
-    height = int(model_cfg.get("sr_internal_height", 32))
+    width, height = _get_internal_size(model_cfg)
     if width <= 0:
         width = max(options.hr_width, 128)
     if height <= 0:
@@ -201,8 +199,7 @@ def _uploaded_to_rgb_float(image: UploadedImage, width: int, height: int) -> np.
 def _bicubic_first(images: list[UploadedImage], options: PipelineOptions) -> UploadedImage:
     cfg = _load_config()
     model_cfg = cfg["model"]
-    output_width = int(model_cfg.get("sr_internal_width", 128))
-    output_height = int(model_cfg.get("sr_internal_height", 32))
+    output_width, output_height = _get_output_size(model_cfg)
     frame = decode_image(images[0], cv2.IMREAD_COLOR)
     if frame is None:
         return images[0]
@@ -212,6 +209,19 @@ def _bicubic_first(images: list[UploadedImage], options: PipelineOptions) -> Upl
         interpolation=cv2.INTER_CUBIC,
     )
     return opencv_to_uploaded(resized)
+
+
+def _get_internal_size(model_cfg: dict) -> tuple[int, int]:
+    width = int(model_cfg.get("sr_internal_width", 128))
+    height = int(model_cfg.get("sr_internal_height", 32))
+    return width, height
+
+
+def _get_output_size(model_cfg: dict) -> tuple[int, int]:
+    fallback_width, fallback_height = _get_internal_size(model_cfg)
+    width = int(model_cfg.get("output_width", fallback_width))
+    height = int(model_cfg.get("output_height", fallback_height))
+    return width, height
 
 
 def _load_config() -> dict:
