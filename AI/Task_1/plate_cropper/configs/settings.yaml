@@ -1,0 +1,27 @@
+# =============================================
+#  plate_detection_seg 파이프라인 설정
+# =============================================
+
+paths:
+  weights   : "weights/best_noised.pt"
+  input_root: "input"
+  output_root: "output"
+
+model:
+  device    : "cuda"       # "cuda" | "cpu"
+  conf_thr  : 0.25        # 탐지 신뢰도 임계값
+  iou_thr   : 0.45         # NMS IoU 임계값
+  imgsz     : 640          # 추론 입력 해상도
+
+plate:
+  # 국내 표준 번호판 규격 (mm 기준 비율)
+  # 일반 승용 신형: 335 x 170
+  output_width : 335
+  output_height: 170
+
+output:
+  format     : "png"       # 저장 포맷 (무손실)
+  prefix     : "aligned_frame_"   # 파일명 접두사
+
+progress:
+  file: "temp/progress.json"
