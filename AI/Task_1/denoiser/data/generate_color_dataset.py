@@ -15,8 +15,8 @@ import cv2
 import numpy as np
 
 # ── 설정 ──────────────────────────────────────────────
-SOURCE_DIR = Path(__file__).resolve().parent.parent / "train"  # AI/Task_1/train
-OUTPUT_DIR = Path(__file__).resolve().parent / "data" / "dataset_color"
+SOURCE_DIR = Path(__file__).resolve().parents[2] / "train"  # AI/Task_1/train
+OUTPUT_DIR = Path(__file__).resolve().parent / "dataset_color"
 
 SPLITS = {"train": 0.8, "val": 0.1, "test": 0.1}
 SEED = 42

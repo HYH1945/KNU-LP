@@ -165,7 +165,7 @@ def train(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="NAFNet Denoising Experimental Training Script")
-    parser.add_argument("--data_dir", type=str, default="../../dataset_denoising_color", help="path to dataset root")
+    parser.add_argument("--data_dir", type=str, default="../data/dataset_color", help="path to dataset root")
     parser.add_argument("--channels", type=int, default=3, help="number of image channels")
     parser.add_argument("--image_size", type=int, nargs=2, default=[48, 128], help="image resolution [height, width]")
     parser.add_argument("--width", type=int, default=32, help="width (channels) of NAFNet")

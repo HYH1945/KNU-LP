@@ -1,9 +1,21 @@
+import argparse
 import os
+from pathlib import Path
 import torch
 import cv2
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 from model import NAFNet
+
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def load_state_dict(weight_path, device):
+    try:
+        return torch.load(weight_path, map_location=device, weights_only=True)
+    except TypeError:
+        return torch.load(weight_path, map_location=device)
+
 
 def calculate_psnr(img1, img2):
     mse = np.mean((img1 - img2) ** 2)
@@ -17,22 +29,32 @@ def calculate_ssim(img1, img2):
     return ssim(img1, img2, data_range=255, channel_axis=2)
 
 def main():
+    parser = argparse.ArgumentParser(description="Evaluate NAFNet denoising results.")
+    parser.add_argument("--data_dir", type=str, default=str(BASE_DIR.parent / "data" / "dataset_color"))
+    parser.add_argument(
+        "--weight_path",
+        type=str,
+        default=str(BASE_DIR / "checkpoints_nafnet" / "best_nafnet_model_ratio40.pt"),
+    )
+    parser.add_argument("--output_dir", type=str, default=str(BASE_DIR / "results" / "benchmark"))
+    args = parser.parse_args()
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
     # Load NAFNet
     model = NAFNet(in_channels=3, out_channels=3, width=32, enc_blk_nums=[1, 1, 1, 14], middle_blk_num=1, dec_blk_nums=[1, 1, 1, 1])
-    weight_path = "checkpoints_nafnet/best_nafnet_model_ratio40.pt"
+    weight_path = args.weight_path
     if not os.path.exists(weight_path):
         print(f"Error: {weight_path} not found.")
         return
-    model.load_state_dict(torch.load(weight_path, map_location=device))
+    model.load_state_dict(load_state_dict(weight_path, device))
     model.to(device)
     model.eval()
 
-    noisy_dir = "c:/Users/jech0/Desktop/projects/KNU-LP/dataset_denoising_color/test/noisy"
-    clean_dir = "c:/Users/jech0/Desktop/projects/KNU-LP/dataset_denoising_color/test/clean"
-    output_dir = "c:/Users/jech0/Desktop/projects/KNU-LP/BE/test_outputs/denoise_nafnet_benchmark"
+    noisy_dir = os.path.join(args.data_dir, "test", "noisy")
+    clean_dir = os.path.join(args.data_dir, "test", "clean")
+    output_dir = args.output_dir
     os.makedirs(output_dir, exist_ok=True)
 
     files = sorted([f for f in os.listdir(noisy_dir) if f.endswith('.png')])

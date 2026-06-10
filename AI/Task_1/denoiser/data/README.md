@@ -8,9 +8,9 @@
 ---
 
 ## 입력 데이터 설명
-- 입력 경로: `plates/`
+- `generate_dataset.py`: `plates/` 폴더의 번호판 이미지를 Grayscale 데이터셋으로 변환
+- `generate_color_dataset.py`: `AI/Task_1/train/`의 원본 번호판 이미지를 RGB 컬러 데이터셋으로 변환
 - 데이터 형식: PNG, JPG, JPEG, BMP, WEBP
-- 이미지 형태: Grayscale (단일 채널)
 
 각 이미지에 대해 동일한 파일명으로 clean / noisy 쌍이 생성된다.
 
@@ -47,10 +47,21 @@
 
 ## 출력 구조
 
-생성된 데이터셋은 다음과 같은 구조를 가진다:
+생성된 데이터셋은 다음과 같은 구조를 가진다. 생성 결과는 용량 문제로 GitHub에 포함하지 않는다.
 
 ```
-dataset/
+data/dataset/
+  ├── train/
+  │    ├── clean/
+  │    └── noisy/
+  ├── val/
+  │    ├── clean/
+  │    └── noisy/
+  └── test/
+       ├── clean/
+       └── noisy/
+
+data/dataset_color/
   ├── train/
   │    ├── clean/
   │    └── noisy/
@@ -74,12 +85,16 @@ dataset/
 다음 명령어를 통해 데이터셋을 생성할 수 있다:
 
 ```
+cd AI/Task_1/denoiser/data
 python generate_dataset.py
+python generate_color_dataset.py
 ```
 
 기본 설정:
-- 입력 폴더: `plates/`
-- 출력 폴더: `dataset/`
+- Grayscale 입력 폴더: `plates/`
+- Grayscale 출력 폴더: `data/dataset/`
+- RGB 입력 폴더: `AI/Task_1/train/`
+- RGB 출력 폴더: `data/dataset_color/`
 - preview 이미지 출력: 5장
 - 열화 강도: `strong`
 
