@@ -1,0 +1,67 @@
+# Python caches and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Local environments
+.env
+.env.*
+venv/
+.venv/
+env/
+.conda/
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Datasets, checkpoints, and generated outputs
+/data/
+/dataset/
+/datasets/
+/train_dir/
+/train_dir_split.txt
+/checkpoint/
+/checkpoints/
+/save/
+/logs/
+/lightning_logs/
+/runs/
+/wandb/
+/outputs/
+/results/
+
+# Large artifacts
+*.ckpt
+*.pth
+*.pth.tar
+*.pt
+*.tar
+*.safetensors
+*.lmdb
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pkl
+*.pickle
+
+# Evaluation outputs
+*_result.csv
+compare_result*.csv
+results.csv
+metrics.txt
+*.log

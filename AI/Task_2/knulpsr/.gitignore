@@ -1,0 +1,74 @@
+# Python caches and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# Local environments
+.env
+.env.*
+venv/
+.venv/
+env/
+.conda/
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Experiment outputs and run metadata
+logs/
+lightning_logs/
+runs/
+wandb/
+outputs/
+results/
+metrics/
+
+# Model checkpoints, recognizer weights, and checkpoint inspection files
+checkpoint/
+checkpoints/
+crnn_ckpt/
+.ckpt_inspect/
+.ckpt_inspect_parseq/
+.tmp_torch_load/
+*.ckpt
+*.pth
+*.pth.tar
+*.pt
+*.tar
+*.safetensors
+
+# Datasets and large generated artifacts
+/data/
+/dataset/
+/datasets/
+*.lmdb
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pkl
+*.pickle
+
+# Evaluation outputs
+compare_result*.csv
+*_result.csv
+results.csv
+metrics.txt
+*.log
+
+# Optional local third-party repos not vendored in this export
+external/
