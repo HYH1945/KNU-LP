@@ -4,6 +4,9 @@
 
 프로젝트 목표는 CCTV, 단속 카메라와 같이 해상도가 낮고 노이즈가 포함된 영상 환경에서도 번호판을 안정적으로 검출하고 인식할 수 있는 end-to-end 파이프라인을 구현하는 것입니다.
 
+<img width="1182" height="470" alt="image" src="https://github.com/user-attachments/assets/e84fcf36-bbd3-44b1-b907-c079ca812e31" />
+
+
 프로젝트는 크게 **전처리**, **초해상화(Super-Resolution)**, **OCR** 세 단계로 구성되며, 최종 시연을 위해 React 기반 Web UI와 FastAPI 기반 Backend를 함께 제공합니다.
 
 ## 시스템 개요
@@ -13,7 +16,7 @@
 -> 영상 구간 선택 및 프레임 추출
 -> YOLO 기반 번호판 검출 및 crop
 -> 원본 번호판 bbox 면적 기준 상위 5개 후보 선택
--> DnCNN 기반 컬러 디노이징
+-> NAFNet 기반 컬러 디노이징
 -> SR 적용 여부 분기
 -> OCR 또는 OCR ensemble voting
 -> Web UI에서 단계별 결과 및 최종 번호판 문자열 확인
@@ -30,7 +33,7 @@
 | 영상 처리 | 사용자가 지정한 구간에서 프레임 추출 |
 | 번호판 검출 | YOLOv8-seg 기반 번호판 영역 검출 및 perspective 보정 |
 | 후보 선택 | 검출된 번호판 bbox 면적 기준 상위 5개 후보 자동 선택 |
-| 전처리 | 3채널 컬러 DnCNN 기반 디노이징 적용 |
+| 전처리 | 3채널 컬러 NAFNet 기반 디노이징 적용 |
 | SR 분기 | 사용자 입력 HR 해상도와 번호판 bbox 면적을 비교하여 SR 적용 여부 결정 |
 | OCR | GP-LPR 기반 번호판 문자 인식 |
 | Ensemble | 고해상도 후보가 3개 이상인 경우 OCR 결과 majority voting 수행 |
@@ -45,7 +48,7 @@
 | Image / Video Processing | OpenCV, NumPy, Pillow |
 | Deep Learning Framework | PyTorch, torchvision |
 | Plate Detection | Ultralytics YOLOv8-seg |
-| Denoising | DnCNN 기반 3채널 컬러 디노이징 |
+| Denoising | NAFNet 기반 3채널 컬러 디노이징 |
 | Super-Resolution | RGDiffSR, VQGAN, PARSeq |
 | OCR | GP-LPR 기반 번호판 문자 인식 |
 | Collaboration | Git, GitHub branch / PR workflow |
@@ -117,7 +120,7 @@ Frontend의 `/api` 요청은 Vite proxy 설정을 통해 기본적으로 `http:/
 | 영상 구간 선택 및 프레임 추출 | 구현 완료 |
 | YOLO 번호판 검출 및 crop | 구현 완료 |
 | 번호판 후보 상위 5개 선정 | 구현 완료 |
-| DnCNN 컬러 디노이징 | 구현 완료 |
+| NAFNet 컬러 디노이징 | 구현 완료 |
 | SR 자동 분기 및 RGDiffSR 연동 | 구현 완료 |
 | GP-LPR OCR 연동 | 구현 완료 |
 | OCR ensemble voting | 구현 완료 |
