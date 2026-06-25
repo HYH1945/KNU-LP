@@ -1,15 +1,22 @@
+```gitignore
+# ──────────────────────────────────────────
 # Python caches and build artifacts
+# ──────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
+
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
 dist/
 build/
 *.egg-info/
 
+# ──────────────────────────────────────────
 # Local environments
+# ──────────────────────────────────────────
 .env
 .env.*
 venv/
@@ -17,21 +24,30 @@ venv/
 env/
 .conda/
 
+# ──────────────────────────────────────────
 # IDE / editor files
+# ──────────────────────────────────────────
 .vscode/
 .idea/
+
 *.swp
 *.swo
 
+# ──────────────────────────────────────────
 # OS files
+# ──────────────────────────────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
 
+# ──────────────────────────────────────────
 # Datasets, checkpoints, and generated outputs
+# ──────────────────────────────────────────
 /data/
 /dataset/
 /datasets/
+data/dataset/
+
 /train_dir/
 /train_dir_split.txt
 /checkpoint/
@@ -43,8 +59,11 @@ desktop.ini
 /wandb/
 /outputs/
 /results/
+results/
 
+# ──────────────────────────────────────────
 # Large artifacts
+# ──────────────────────────────────────────
 *.ckpt
 *.pth
 *.pth.tar
@@ -59,9 +78,21 @@ desktop.ini
 *.pkl
 *.pickle
 
+# ──────────────────────────────────────────
+# Generated images
+# ──────────────────────────────────────────
+*.png
+
+# ──────────────────────────────────────────
 # Evaluation outputs
+# ──────────────────────────────────────────
 *_result.csv
 compare_result*.csv
 results.csv
 metrics.txt
+
+# ──────────────────────────────────────────
+# Logs
+# ──────────────────────────────────────────
 *.log
+```
