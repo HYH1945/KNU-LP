@@ -1,0 +1,90 @@
+model:
+  base_learning_rate: 4.5e-6
+  target: ldm.models.autoencoder.VQModel
+  params:
+    embed_dim: 3
+    n_embed: 8192
+    ddconfig:
+      double_z: false
+      z_channels: 3
+      resolution: 256
+      in_channels: 3
+      out_ch: 3
+      ch: 128
+      ch_mult: [1, 2]
+      num_res_blocks: 2
+      attn_resolutions: []
+      dropout: 0.0
+
+    lossconfig:
+      target: ldm.modules.losses.vqperceptual.VQLPIPSWithDiscriminator
+      params:
+        n_classes: 8192
+        disc_conditional: false
+        disc_in_channels: 3
+        disc_start: 10000
+        disc_weight: 0.8
+        codebook_weight: 1.0
+
+data:
+  target: main.DataModuleFromConfig
+  params:
+    batch_size: 12
+    num_workers: 0
+    train:
+      target: ldm.data.textzoom.plateFolderDataset
+      params:
+        roots: [
+          '<TRAIN_DATA_ROOT>'
+        ]
+        voc_type: 'all'
+        max_len: 100
+        num_lr: 5
+        num_hr: 5
+        hr_target_index: 3
+        random_hr: false
+        random_main_lr: true
+        main_lr_index: 3
+        sync_hr_with_main_lr: false
+        hr_select_by_parseq: false
+        annotation_required: false
+        fallback_to_plate_name: true
+
+    validation:
+      target: ldm.data.textzoom.plateFolderDataset
+      params:
+        roots: [
+          '<VAL_DATA_ROOT>'
+        ]
+        voc_type: 'all'
+        max_len: 100
+        num_lr: 5
+        num_hr: 5
+        hr_target_index: 3
+        random_hr: false
+        random_main_lr: false
+        main_lr_index: 3
+        sync_hr_with_main_lr: true
+        hr_select_by_parseq: false
+        annotation_required: false
+        fallback_to_plate_name: true
+
+    train_align_collate_fn:
+      target: ldm.data.textzoom.alignCollate_realWTL_forVQGAN
+      params:
+        imgH: 32
+        imgW: 128
+        down_sample_scale: 2
+        mask: false
+        train: true
+        use_all_hr_frames: true
+
+    val_align_collate_fn:
+      target: ldm.data.textzoom.alignCollate_realWTL_forVQGAN
+      params:
+        imgH: 32
+        imgW: 128
+        down_sample_scale: 2
+        mask: false
+        train: false
+        use_all_hr_frames: true
