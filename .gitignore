@@ -1,24 +1,111 @@
+```gitignore
 .codex-run/
 
-# Python
+# ──────────────────────────────────────────
+# Python caches and build artifacts
+# ──────────────────────────────────────────
 __pycache__/
 *.py[cod]
-.pytest_cache/
+*$py.class
 
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+dist/
+build/
+*.egg-info/
+
+# ──────────────────────────────────────────
 # Frontend
+# ──────────────────────────────────────────
 FE/node_modules/
 FE/dist/
 FE/.npm-cache/
 
-# Local model weights
-*.pt
-*.pth
-*.onnx
+# ──────────────────────────────────────────
+# Local environments
+# ──────────────────────────────────────────
+.env
+.env.*
+venv/
+.venv/
+env/
+.conda/
 
-# Local media/test artifacts
+# ──────────────────────────────────────────
+# IDE / editor files
+# ──────────────────────────────────────────
+.vscode/
+.idea/
+
+*.swp
+*.swo
+
+# ──────────────────────────────────────────
+# OS files
+# ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ──────────────────────────────────────────
+# Datasets, checkpoints, and generated outputs
+# ──────────────────────────────────────────
+/data/
+/dataset/
+/datasets/
+/train_dir/
+/train_dir_split.txt
+/checkpoint/
+/checkpoints/
+/save/
+/logs/
+/lightning_logs/
+/runs/
+/wandb/
+/outputs/
+/results/
+
+# ──────────────────────────────────────────
+# Large artifacts
+# ──────────────────────────────────────────
+*.ckpt
+*.pth
+*.pth.tar
+*.pt
+*.tar
+*.onnx
+*.safetensors
+*.lmdb
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pkl
+*.pickle
+
+# ──────────────────────────────────────────
+# Media / test artifacts
+# ──────────────────────────────────────────
 *.mp4
 *.avi
 *.mov
 *.mkv
+
 AI/Task_1/denoiser/pipeline/input.png
 AI/Task_1/denoiser/pipeline/output.png
+
+# ──────────────────────────────────────────
+# Evaluation outputs
+# ──────────────────────────────────────────
+*_result.csv
+compare_result*.csv
+results.csv
+metrics.txt
+
+# ──────────────────────────────────────────
+# Logs
+# ──────────────────────────────────────────
+*.log
+```
