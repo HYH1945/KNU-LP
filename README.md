@@ -140,3 +140,13 @@ Frontend의 `/api` 요청은 Vite proxy 설정을 통해 기본적으로 `http:/
 - 모델 weight 파일은 용량 문제로 제외되어 있으므로, 전체 기능 시연 시에는 `BE/WEIGHTS.md`에 맞춰 별도 배치가 필요합니다.
 - `BE/vendors/`에는 RGDiffSR, GP-LPR 등 외부 모델 구현 코드가 포함되어 있으며, 서비스 코드와 분리하여 관리했습니다.
 - `AI/Task_*` 디렉토리는 팀원별 실험 및 검증 과정을 보여주기 위한 기록 성격이 강하며, 최종 Web UI 시연은 `FE/`와 `BE/`를 기준으로 실행합니다.
+
+## 팀원 및 역할
+
+| 이름 | 역할 | GitHub |
+|:---:|---|:---:|
+| **박재현** | Task 1 (번호판 검출(YOLO) 모듈 개발) | [CtrlPlusS](https://github.com/CtrlPlusS) |
+| **손영준** | Task 1 (디노이징 모듈 개발)   | [fourilla](https://github.com/fourilla) |
+| **장준용** | Task 2 (SR 모듈 개발)    | [givingdragon](https://github.com/givingdragon) |
+| **전민영** | Task 3 (OCR 모듈 개발) | [mym0314-afk](https://github.com/mym0314-afk) |
+| **황영하** | Task 1 (디노이징 모듈 개발) / 팀장 | [HYH1945](https://github.com/HYH1945) |
